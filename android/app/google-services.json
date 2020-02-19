@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "586571718014",
+    "firebase_url": "https://alto-api.firebaseio.com",
+    "project_id": "alto-api",
+    "storage_bucket": "alto-api.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:586571718014:android:fe5eccfe0257382beda72f",
+        "android_client_info": {
+          "package_name": "com.cirrusconcept.alto_staffing"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "586571718014-jqblmni1cmt18i11llva03bh56b7q115.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB6pZYhWZbew4ZPdVqEQNTOlyPtNPiMvJs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "586571718014-jqblmni1cmt18i11llva03bh56b7q115.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
