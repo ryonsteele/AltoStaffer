@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'dart:io' show Platform;
 import 'package:http/http.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,7 +11,7 @@ import 'AppPage.dart';
 import 'LandPage.dart';
 
 class Home extends StatefulWidget {
-
+  static String myUserName = "";
   static SessionKey keyNumber;
   @override
   _HomeState createState() => _HomeState();
@@ -20,6 +21,7 @@ class _HomeState extends State<Home> {
 
   final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
   //FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
+
 
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   TextEditingController _emailController = new TextEditingController();
@@ -31,6 +33,7 @@ class _HomeState extends State<Home> {
   static SharedPreferences prefs;
   String _email;
   String _password;
+  static String deviceToken = "";
   String _displayName;
   bool _obsecure = false;
 
@@ -60,6 +63,7 @@ class _HomeState extends State<Home> {
     });
     firebaseMessaging.getToken().then((token) {
       //update(token);
+      deviceToken = token;
       print(token);
     });
   }
@@ -143,9 +147,7 @@ class _HomeState extends State<Home> {
     void _loginUser() {
       _email = _emailController.text;
       _password = _passwordController.text;
-      _emailController.clear();
-      _passwordController.clear();
-
+      Home.myUserName = _email.trim();
 
       if(firstLogin) {
         showAlertDialog(context);
@@ -556,11 +558,20 @@ class _HomeState extends State<Home> {
   }
 
   _makePostRequest() async {
+
+    String platform = '';
+    if (Platform.isAndroid) {
+      platform = 'Android';
+    } else if (Platform.isIOS) {
+      platform = 'iOS';
+    }else {
+      throw new UnsupportedError("Unknown device type");
+    }
     // set up POST request arguments
     //todo externalize
-    String url = 'http://192.168.1.98:8080/api/mobile/login';
+    String url = 'http://192.168.1.218:8080/api/mobile/login';
     Map<String, String> headers = {"Content-type": "application/json"};
-    String json = '{"username": "'+ _email+'", "password": "'+_password+'" }';
+    String json = '{"username": "'+ _email+'", "password": "'+_password+'", "devicetoken": "'+deviceToken+'", "devicetype": "'+platform+'" }';
     // make POST request
     Response response = await post(url, headers: headers, body: json);
     // check the status code for the result
@@ -574,6 +585,8 @@ class _HomeState extends State<Home> {
         prefs.setString('first_key', _email);
         prefs.setString('second_key', _password);
       }else{
+        _emailController.clear();
+        _passwordController.clear();
         prefs.setString('first_key', '');
         prefs.setString('second_key', '');
       }

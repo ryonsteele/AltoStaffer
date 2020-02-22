@@ -3,7 +3,12 @@
 import 'package:alto_staffing/models/shifts.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'dart:convert';
+import 'package:alto_staffing/models/ApiShift.dart';
 import 'package:sliding_button/sliding_button.dart';
+import 'package:http/http.dart';
+import 'package:alto_staffing/Home.dart';
+import 'package:geolocator/geolocator.dart';
 
 class ShiftDetailView extends StatefulWidget {
 
@@ -20,10 +25,16 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
   final GlobalKey<SlidingButtonState> _slideButtonKey = GlobalKey<SlidingButtonState>();
   TextEditingController _textFieldController = TextEditingController();
-  static const int CHECK_IN = 0;
-  static const int CHECKOUT_BRK = 1;
-  static const int CHECKIN_BRK = 2;
-  static const int CHECKOUT = 3;
+  final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
+  Position _currentPosition;
+  String _currentAddress;
+  static const int OPEN_SHIFT = 0;
+  static const int CHECKED_IN = 1;
+  static const int CHECKED_OUT_BRK = 2;
+  static const int CHECKED_IN_BRK = 3;
+  static const int CHECKED_OUT = 4;
+  static String statusText = "";
+  static MaterialColor statusColor = Colors.lightBlue;
   static String sliderStatus = "Slide to Change Status...";
   SlidingButton myButton;
 
@@ -39,6 +50,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
   Future loadInit() async {
 
+    _makeGetRequest();
     var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
     var date2 = DateTime.now();
     var difference = date2.difference(newDateTimeObj2).inHours;
@@ -53,28 +65,29 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     String title = "";
     TextField content;
 
-    if(currentStatus == CHECK_IN){
+    if(currentStatus == OPEN_SHIFT){
       title = "Check In for Shift?";
       content = TextField(
         controller: _textFieldController,
         decoration: InputDecoration(hintText: "Supervisor Initials..."),
       );
     }
-    if(currentStatus == CHECKOUT_BRK){
+    if(currentStatus == CHECKED_IN){
       title = "Check Out for Break?";
       content = null;
     }
-    if(currentStatus == CHECKIN_BRK){
+    if(currentStatus == CHECKED_OUT_BRK){
       title = "Check In from Break?";
       content = null;
     }
-    if(currentStatus == CHECKOUT){
+    if(currentStatus == CHECKED_IN_BRK){
       title = "Check Out from Shift?";
       content = TextField(
         controller: _textFieldController,
         decoration: InputDecoration(hintText: "Supervisor Initials..."),
       );
     }
+
     setState(() {});
 
 
@@ -89,11 +102,12 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       child: Text("Confirm"),
       onPressed:  () {
         Navigator.of(context, rootNavigator: true).pop('dialog');
-        if(currentStatus >= CHECKOUT){
+        _getCurrentLocation();
+        if(currentStatus >= CHECKED_OUT){
           myButton = null;
           setState(() {});
         }
-        currentStatus++;},
+       },
     );
 
     // set up the AlertDialog
@@ -141,6 +155,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
 
     return Scaffold(
+      resizeToAvoidBottomPadding: false,
       appBar: AppBar(
         title: Text('Shift Details'),
         backgroundColor: Color(0xFF0B859E),
@@ -163,7 +178,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
                       child: Text('OrderID:${this.data.orderId}', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
                     ),
                     Padding(padding: EdgeInsets.only(right: 25.0, top: 25),
-                      child: Text('Status: ${this.data.status}', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                      child: Text('Status: ${statusText}', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, backgroundColor: statusColor)),
                     ),
                   ]),
               Row(
@@ -244,13 +259,18 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     );
   }
 
-  Future _makePostRequest() async {
+  Future _makePostRequest(String currentAddy, double lat, double lon) async {
     // set up POST request arguments
     //todo externalize
-    String url = 'http://192.168.1.98:8080/api/mobile/login';
+    String url = 'http://192.168.1.218:8080/api/mobile/shift';
     Map<String, String> headers = {"Content-type": "application/json"};
-    String json = '{"username": "'+ _email+'", "password": "'+_password+'" }';
+
+    String json = '{"tempId": "'+ this.data.tempId+'", "username": "'+Home.myUserName+'",' +'"clockedAddy": "'+ currentAddy+
+        '",' +'"lat": "'+ lat.toString()+'",' +'"lon": "'+ lon.toString()+ '",' +'"shiftstatuskey": "'+ currentStatus.toString()+
+        '", "shiftSignoff": "'+ _textFieldController.text+ '", "orderId": "'+ this.data.orderId+'"}';
+
     // make POST request
+    print(json);
     Response response = await post(url, headers: headers, body: json);
     // check the status code for the result
     int statusCode = response.statusCode;
@@ -258,18 +278,138 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     String body = response.body;
 
     if(statusCode >= 200 && statusCode < 300){
+      currentStatus = CHECKED_IN;
+      _setStatusText(currentStatus);
+    }
+  }
 
-      if( rememberMe ) {
-        prefs.setString('first_key', _email);
-        prefs.setString('second_key', _password);
-      }else{
-        prefs.setString('first_key', '');
-        prefs.setString('second_key', '');
+  Future _makePatchRequest(String currentAddy, double lat, double lon) async {
+    // set up POST request arguments
+    //todo externalize
+    String url = 'http://192.168.1.218:8080/api/mobile/shift';
+    Map<String, String> headers = {"Content-type": "application/json"};
+
+    String json = '{"tempId": "'+ this.data.tempId+'", "username": "'+Home.myUserName+'",' +' "clockedAddy": "'+ currentAddy+
+        '",' +' "lat": "'+ lat.toString()+'",' +' "lon": "'+ lon.toString()+ '",' +'"shiftstatuskey": "'+ currentStatus.toString()+
+        '", "shiftSignoff": "'+ _textFieldController.text+ '", "orderId": "'+ this.data.orderId+'"}';
+
+    // make POST request
+    Response response = await patch(url, headers: headers, body: json);
+    // check the status code for the result
+    int statusCode = response.statusCode;
+    // this API passes back the id of the new item added to the body
+    String body = response.body;
+
+    if(statusCode >= 200 && statusCode < 300){
+      currentStatus++;
+      _setStatusText(currentStatus);
+      if(currentStatus >= CHECKED_OUT){
+        myButton = null;
+      }
+    }
+    setState(() {});
+  }
+
+  Future _makeGetRequest() async {
+    // set up POST request arguments
+    //todo externalize
+    String url = 'http://192.168.1.218:8080/api/mobile/shift/'+this.data.orderId;
+    Map<String, String> headers = {"Content-type": "application/json"};
+
+
+    // make POST request
+    Response response = await get(url, headers: headers);
+    // check the status code for the result
+    int statusCode = response.statusCode;
+
+
+    if(statusCode >= 200 && statusCode < 300){
+
+      String body = response.body;
+      if(body == null || body.isEmpty){
+        currentStatus = 0;
+        statusText = 'OPEN';
+        setState(() {});
+        return;
       }
 
-      prefs.setBool('init_key', false);
-      Navigator.push(context, MaterialPageRoute(builder: (context) => LandPage()));
-    }
+      final Map parsed = json.decode(body);
+      final liveShift = ApiShift.fromJson(parsed);
 
+      if(liveShift.shiftEndTimeActual == null){
+        currentStatus = CHECKED_IN_BRK;
+      }
+      if(liveShift.breakEndTime == null){
+        currentStatus = CHECKED_OUT_BRK;
+      }
+      if(liveShift.breakStartTime == null){
+        currentStatus = CHECKED_IN;
+      }
+      if(liveShift.shiftStartTimeActual == null){
+        currentStatus = OPEN_SHIFT;
+      }
+
+      _setStatusText(currentStatus);
+
+      if(currentStatus >= CHECKED_OUT){
+        myButton = null;
+      }
+    }
+    setState(() {});
+  }
+
+  _setStatusText(int stat){
+
+    if(stat == CHECKED_IN){
+      statusText = 'ON SHIFT';
+      statusColor = Colors.lightGreen;
+    }
+    if(stat == CHECKED_IN_BRK){
+      statusText = 'ON SHIFT';
+      statusColor = Colors.lightGreen;
+    }
+    if(stat == CHECKED_OUT_BRK){
+      statusText = 'BREAK';
+      statusColor = Colors.yellow;
+    }
+    if(stat == CHECKED_OUT){
+      statusText = 'SHIFT END';
+      statusColor = Colors.blueGrey;
+    }
+    if(stat == OPEN_SHIFT){
+      statusText = 'OPEN';
+      statusColor = Colors.blue;
+    }
+  }
+
+  _getCurrentLocation() {
+    geolocator
+        .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
+        .then((Position position) {
+      _currentPosition = position;
+      _getAddressFromLatLng();
+    }).catchError((e) {
+      print(e);
+    });
+  }
+
+  _getAddressFromLatLng() async {
+    try {
+      List<Placemark> p = await geolocator.placemarkFromCoordinates(
+          _currentPosition.latitude, _currentPosition.longitude);
+
+      Placemark place = p[0];
+      _currentAddress =
+      "${place.locality}, ${place.postalCode}, ${place.country}";
+      if(currentStatus == OPEN_SHIFT) {
+        _makePostRequest(_currentAddress, _currentPosition.latitude,
+            _currentPosition.longitude);
+      }else{
+        _makePatchRequest(_currentAddress, _currentPosition.latitude,
+            _currentPosition.longitude);
+      }
+    } catch (e) {
+      print(e);
+    }
   }
 }
