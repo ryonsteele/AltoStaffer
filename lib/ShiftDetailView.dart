@@ -1,5 +1,6 @@
 
 
+import 'package:alto_staffing/AltoUtils.dart';
 import 'package:alto_staffing/models/shifts.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -9,6 +10,7 @@ import 'package:sliding_button/sliding_button.dart';
 import 'package:http/http.dart';
 import 'package:alto_staffing/Home.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ShiftDetailView extends StatefulWidget {
 
@@ -33,6 +35,8 @@ class _ShiftDetailView extends State<ShiftDetailView> {
   static const int CHECKED_OUT_BRK = 2;
   static const int CHECKED_IN_BRK = 3;
   static const int CHECKED_OUT = 4;
+  static SharedPreferences prefs;
+  static Color sliderColor = Colors.blue;
   static String statusText = "";
   static MaterialColor statusColor = Colors.lightBlue;
   static String sliderStatus = "Slide to Change Status...";
@@ -50,13 +54,25 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
   Future loadInit() async {
 
+    if(this.data.status == 'Open') {
+      sliderColor = Colors.orangeAccent;
+      statusText = 'OPEN';
+      statusColor = Colors.orange;
+      myButton = getMyButton();
+      _makeInterestGetRequest();
+      return;
+    }
+
     _makeGetRequest();
     var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
     var date2 = DateTime.now();
     var difference = date2.difference(newDateTimeObj2).inHours;
-    if( difference <= 2 && this.data.status == 'Sched') {
+    // currently set to allow clockin two hours after shift start
+    if( difference <= 2 || currentStatus != OPEN_SHIFT) {
       myButton = getMyButton();
     }
+
+
   }
 
 
@@ -101,6 +117,11 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     Widget continueButton = FlatButton(
       child: Text("Confirm"),
       onPressed:  () {
+        if(this.data.status == 'Open'){
+          _postShiftInterest();
+          return;
+        }
+
         Navigator.of(context, rootNavigator: true).pop('dialog');
         _getCurrentLocation();
         if(currentStatus >= CHECKED_OUT){
@@ -134,15 +155,20 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       key: _slideButtonKey,
       buttonHeight: 60,
       buttonText: sliderStatus,
-      buttonColor: Color.fromRGBO(24, 190, 181, 1),
-      slideButtonIconColor: Color.fromRGBO(24, 190, 181, 1),
+      buttonColor: sliderColor,
+      slideButtonIconColor: Color(0xFF05152B),
       radius: 8,
       onSlideSuccessCallback: () {
         //_incrementCounter();
-        showAlertDialog(context);
+        if(this.data.status == 'Open') {
+          _postShiftInterest();
+        }else {
+          showAlertDialog(context);
+        }
         Future.delayed(Duration(seconds: 1), () {
           _slideButtonKey.currentState.reset();
-        });},);
+        });
+        },);
   }
 
 
@@ -259,10 +285,31 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     );
   }
 
+  Future _postShiftInterest() async {
+    // set up POST request arguments
+    String url = AltoUtils.baseApiUrl + '/openshift';
+    Map<String, String> headers = {"Content-type": "application/json"};
+    prefs = await SharedPreferences.getInstance();
+    String tempid = prefs.getString('temp_id') ?? '';
+
+    String json = '{"tempId": "'+ tempid+'", "username": "'+Home.myUserName + '", "orderId": "'+ this.data.orderId+'"}';
+
+    // make POST request
+    print(json);
+    Response response = await post(url, headers: headers, body: json);
+    // check the status code for the result
+    int statusCode = response.statusCode;
+    // this API passes back the id of the new item added to the body
+    String body = response.body;
+
+    if(statusCode >= 200 && statusCode < 300){
+      Navigator.of(context).pop();
+    }
+  }
+
   Future _makePostRequest(String currentAddy, double lat, double lon) async {
     // set up POST request arguments
-    //todo externalize
-    String url = 'http://192.168.1.218:8080/api/mobile/shift';
+    String url = AltoUtils.baseApiUrl + '/shift';
     Map<String, String> headers = {"Content-type": "application/json"};
 
     String json = '{"tempId": "'+ this.data.tempId+'", "username": "'+Home.myUserName+'",' +'"clockedAddy": "'+ currentAddy+
@@ -279,14 +326,15 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
     if(statusCode >= 200 && statusCode < 300){
       currentStatus = CHECKED_IN;
-      _setStatusText(currentStatus);
+      Navigator.of(context).pop();
+      //_setStatusText(currentStatus);
     }
+    setState(() {});
   }
 
   Future _makePatchRequest(String currentAddy, double lat, double lon) async {
     // set up POST request arguments
-    //todo externalize
-    String url = 'http://192.168.1.218:8080/api/mobile/shift';
+    String url = AltoUtils.baseApiUrl + '/shift';
     Map<String, String> headers = {"Content-type": "application/json"};
 
     String json = '{"tempId": "'+ this.data.tempId+'", "username": "'+Home.myUserName+'",' +' "clockedAddy": "'+ currentAddy+
@@ -302,18 +350,18 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
     if(statusCode >= 200 && statusCode < 300){
       currentStatus++;
-      _setStatusText(currentStatus);
+      //_setStatusText(currentStatus);
       if(currentStatus >= CHECKED_OUT){
         myButton = null;
       }
+      Navigator.of(context).pop();
     }
     setState(() {});
   }
 
   Future _makeGetRequest() async {
     // set up POST request arguments
-    //todo externalize
-    String url = 'http://192.168.1.218:8080/api/mobile/shift/'+this.data.orderId;
+    String url = AltoUtils.baseApiUrl + '/shift/'+this.data.orderId;
     Map<String, String> headers = {"Content-type": "application/json"};
 
 
@@ -350,9 +398,37 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       }
 
       _setStatusText(currentStatus);
+      myButton = getMyButton();
 
       if(currentStatus >= CHECKED_OUT){
         myButton = null;
+      }
+    }
+    setState(() {});
+  }
+
+  Future _makeInterestGetRequest() async {
+    // set up POST request arguments
+    prefs = await SharedPreferences.getInstance();
+    String tempid = prefs.getString('temp_id') ?? '';
+    String url = AltoUtils.baseApiUrl + '/openshift/'+this.data.orderId+'/'+tempid;
+    Map<String, String> headers = {"Content-type": "application/json"};
+
+
+    // make POST request
+    Response response = await get(url, headers: headers);
+    // check the status code for the result
+    int statusCode = response.statusCode;
+
+
+    if(statusCode >= 200 && statusCode < 300){
+
+      String body = response.body;
+      if(body != null && !body.isEmpty){
+        statusText = 'Submitted';
+        myButton = null;
+        setState(() {});
+        return;
       }
     }
     setState(() {});
@@ -363,23 +439,30 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     if(stat == CHECKED_IN){
       statusText = 'ON SHIFT';
       statusColor = Colors.lightGreen;
+      sliderColor = Colors.lightGreen;
     }
     if(stat == CHECKED_IN_BRK){
       statusText = 'ON SHIFT';
       statusColor = Colors.lightGreen;
+      sliderColor = Colors.lightGreen;
     }
     if(stat == CHECKED_OUT_BRK){
       statusText = 'BREAK';
       statusColor = Colors.yellow;
+      sliderColor = Colors.yellow;
     }
     if(stat == CHECKED_OUT){
       statusText = 'SHIFT END';
       statusColor = Colors.blueGrey;
+      sliderColor = Colors.blueGrey;
+      return;
     }
     if(stat == OPEN_SHIFT){
       statusText = 'OPEN';
       statusColor = Colors.blue;
+      sliderColor = Colors.blue;
     }
+    myButton = getMyButton();
   }
 
   _getCurrentLocation() {

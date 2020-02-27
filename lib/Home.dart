@@ -1,3 +1,4 @@
+import 'package:alto_staffing/AltoUtils.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -535,7 +536,7 @@ class _HomeState extends State<Home> {
     List keys = new List<SessionKey>();
     Response response;
     try {
-      response = await http.get('https://ctms.contingenttalentmanagement.com/CirrusConcept/clearConnect/2_0/index.cfm?action=getSessionKey&username=lesliekahn&password=Jan242003!&resultType=json');
+      response = await http.get(AltoUtils.baseHcsUrl + '?action=getSessionKey'+AltoUtils.suCreds+'&resultType=json');
 
     } on Exception catch (exception) {
       print(exception);
@@ -569,11 +570,11 @@ class _HomeState extends State<Home> {
     }
     // set up POST request arguments
     //todo externalize
-    String url = 'http://192.168.1.218:8080/api/mobile/login';
+    String url = AltoUtils.baseApiUrl + '/login';
     Map<String, String> headers = {"Content-type": "application/json"};
-    String json = '{"username": "'+ _email+'", "password": "'+_password+'", "devicetoken": "'+deviceToken+'", "devicetype": "'+platform+'" }';
+    String myjson = '{"username": "'+ _email+'", "password": "'+_password+'", "devicetoken": "'+deviceToken+'", "devicetype": "'+platform+'" }';
     // make POST request
-    Response response = await post(url, headers: headers, body: json);
+    Response response = await post(url, headers: headers, body: myjson);
     // check the status code for the result
     int statusCode = response.statusCode;
     // this API passes back the id of the new item added to the body
@@ -592,7 +593,19 @@ class _HomeState extends State<Home> {
       }
 
       prefs.setBool('init_key', false);
-      Navigator.push(context, MaterialPageRoute(builder: (context) => LandPage()));
+
+      try {
+        final Map<String, dynamic> data = json.decode(body);
+        print(data['tempid']);
+        prefs.setString('temp_id', data['tempid']);
+        Navigator.push(context, MaterialPageRoute(builder: (context) => LandPage(tempid: data['tempid'])));
+
+      } on FormatException catch (e) {
+        print("That string didn't look like Json.");
+      } on NoSuchMethodError catch (e) {
+        print('That string was null!');
+      }
+
     }
 
   }
