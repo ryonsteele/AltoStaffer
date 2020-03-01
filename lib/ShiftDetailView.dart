@@ -11,6 +11,7 @@ import 'package:http/http.dart';
 import 'package:alto_staffing/Home.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
 
 class ShiftDetailView extends StatefulWidget {
 
@@ -62,17 +63,8 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       _makeInterestGetRequest();
       return;
     }
-
+    _getCurrentLocationInit();
     _makeGetRequest();
-    var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
-    var date2 = DateTime.now();
-    var difference = date2.difference(newDateTimeObj2).inHours;
-    // currently set to allow clockin two hours after shift start
-    if( difference <= 2 || currentStatus != OPEN_SHIFT) {
-      myButton = getMyButton();
-    }
-
-
   }
 
 
@@ -166,7 +158,9 @@ class _ShiftDetailView extends State<ShiftDetailView> {
           showAlertDialog(context);
         }
         Future.delayed(Duration(seconds: 1), () {
-          _slideButtonKey.currentState.reset();
+          if(_slideButtonKey != null && _slideButtonKey.currentState != null) {
+            _slideButtonKey.currentState.reset();
+          }
         });
         },);
   }
@@ -179,11 +173,47 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       return new Container();
     }
 
+    final List<String> _dropdownValues = [
+      "  ",
+      "Sent Home"
+    ]; //The list of values we want on the dropdown
+    String _currentlySelected = ""; //var to hold currently selected value
+
+    //make the drop down its own widget for readability
+    Widget dropdownWidget() {
+      return DropdownButton(
+        //map each value from the lIst to our dropdownMenuItem widget
+        items: _dropdownValues
+            .map((value) => DropdownMenuItem(
+          child: Text(value),
+          value: value,
+        ))
+            .toList(),
+        onChanged: (String value) {
+          //once dropdown changes, update the state of out currentValue
+          setState(() {
+            _currentlySelected = value;
+            if(!_currentlySelected.trim().isEmpty){
+              showSentHomeDialog(context);
+            }
+          });
+        },
+        //this wont make dropdown expanded and fill the horizontal space
+        isExpanded: false,
+        //make default value of dropdown the first value of our list
+        value: _dropdownValues.first,
+      );
+    }
+
 
     return Scaffold(
       resizeToAvoidBottomPadding: false,
       appBar: AppBar(
         title: Text('Shift Details'),
+        actions: <Widget>[
+          //Add the dropdown widget to the `Action` part of our appBar. it can also be among the `leading` part
+          dropdownWidget(),
+        ],
         backgroundColor: Color(0xFF0B859E),
       ),
       body: new Container(
@@ -286,6 +316,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
   }
 
   Future _postShiftInterest() async {
+    try{
     // set up POST request arguments
     String url = AltoUtils.baseApiUrl + '/openshift';
     Map<String, String> headers = {"Content-type": "application/json"};
@@ -304,10 +335,21 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
     if(statusCode >= 200 && statusCode < 300){
       Navigator.of(context).pop();
+    }else{
+      showConnectionDialog(context);
+    }
+
+    } on Exception catch (exception) {
+      print(exception);
+      showConnectionDialog(context);
+    } catch (error) {
+      print(error);
+      showConnectionDialog(context);
     }
   }
 
   Future _makePostRequest(String currentAddy, double lat, double lon) async {
+    try{
     // set up POST request arguments
     String url = AltoUtils.baseApiUrl + '/shift';
     Map<String, String> headers = {"Content-type": "application/json"};
@@ -317,7 +359,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
         '", "shiftSignoff": "'+ _textFieldController.text+ '", "orderId": "'+ this.data.orderId+'"}';
 
     // make POST request
-    print(json);
+   // print(json);
     Response response = await post(url, headers: headers, body: json);
     // check the status code for the result
     int statusCode = response.statusCode;
@@ -328,11 +370,61 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       currentStatus = CHECKED_IN;
       Navigator.of(context).pop();
       //_setStatusText(currentStatus);
+    }else{
+      showConnectionDialog(context);
+    }
+
+    } on Exception catch (exception) {
+      print(exception);
+      showConnectionDialog(context);
+    } catch (error) {
+      print(error);
+      showConnectionDialog(context);
     }
     setState(() {});
   }
 
+  Future
+  _makeSentHomeRequest() async {
+    try{
+      // set up POST request arguments
+      String url = AltoUtils.baseApiUrl + '/orderreturn';
+      Map<String, String> headers = {"Content-type": "application/json"};
+
+      String json = '{"tempId": "'+ this.data.tempId+'", "username": "'+Home.myUserName+'",' +'"clientName": "'+ this.data.clientName+'"}';
+
+      // make POST request
+     // print(json);
+      Response response = await post(url, headers: headers, body: json);
+      // check the status code for the result
+      int statusCode = response.statusCode;
+      // this API passes back the id of the new item added to the body
+      String body = response.body;
+
+      if(statusCode >= 200 && statusCode < 300){
+        currentStatus = CHECKED_OUT;
+        showSentHomeDialog(context);
+
+      }else{
+        showConnectionDialog(context);
+      }
+
+    } on Exception catch (exception) {
+      print(exception);
+      showConnectionDialog(context);
+    } catch (error) {
+      print(error);
+      showConnectionDialog(context);
+    }
+    Navigator.of(context).pop();
+    UrlLauncher.launch('tel:+1 205 388 0478');
+    currentStatus = CHECKED_OUT;
+    myButton = getMyButton();
+    setState(() {});
+  }
+
   Future _makePatchRequest(String currentAddy, double lat, double lon) async {
+    try{
     // set up POST request arguments
     String url = AltoUtils.baseApiUrl + '/shift';
     Map<String, String> headers = {"Content-type": "application/json"};
@@ -355,12 +447,23 @@ class _ShiftDetailView extends State<ShiftDetailView> {
         myButton = null;
       }
       Navigator.of(context).pop();
+    }else{
+      showConnectionDialog(context);
+    }
+
+    } on Exception catch (exception) {
+      print(exception);
+      showConnectionDialog(context);
+    } catch (error) {
+      print(error);
+      showConnectionDialog(context);
     }
     setState(() {});
   }
 
   Future _makeGetRequest() async {
     // set up POST request arguments
+    try{
     String url = AltoUtils.baseApiUrl + '/shift/'+this.data.orderId;
     Map<String, String> headers = {"Content-type": "application/json"};
 
@@ -375,9 +478,21 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
       String body = response.body;
       if(body == null || body.isEmpty){
-        currentStatus = 0;
-        statusText = 'OPEN';
-        setState(() {});
+
+        setState(() {
+          currentStatus = 0;
+          statusText = 'OPEN';
+          _setStatusText(currentStatus);
+          var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
+          var date2 = DateTime.now();
+          var difference = date2.difference(newDateTimeObj2).inHours;
+          // currently set to allow clockin two hours after shift start
+          if( difference <= 2) {
+            myButton = getMyButton();
+          }
+          myButton = getMyButton();
+        });
+
         return;
       }
 
@@ -397,17 +512,32 @@ class _ShiftDetailView extends State<ShiftDetailView> {
         currentStatus = OPEN_SHIFT;
       }
 
-      _setStatusText(currentStatus);
-      myButton = getMyButton();
+      setState(() {
+        _setStatusText(currentStatus);
+        myButton = getMyButton();
+      });
+
 
       if(currentStatus >= CHECKED_OUT){
         myButton = null;
       }
+    }else{
+      showConnectionDialog(context);
     }
-    setState(() {});
+
+    } on Exception catch (exception) {
+      print(exception);
+      showConnectionDialog(context);
+    } catch (error) {
+      print(error);
+      showConnectionDialog(context);
+    }
+
+
   }
 
   Future _makeInterestGetRequest() async {
+    try{
     // set up POST request arguments
     prefs = await SharedPreferences.getInstance();
     String tempid = prefs.getString('temp_id') ?? '';
@@ -430,6 +560,16 @@ class _ShiftDetailView extends State<ShiftDetailView> {
         setState(() {});
         return;
       }
+    }else{
+      showConnectionDialog(context);
+    }
+
+    } on Exception catch (exception) {
+      print(exception);
+      showConnectionDialog(context);
+    } catch (error) {
+      print(error);
+      showConnectionDialog(context);
     }
     setState(() {});
   }
@@ -476,6 +616,16 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     });
   }
 
+  _getCurrentLocationInit() {
+    geolocator
+        .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
+        .then((Position position) {
+      _currentPosition = position;
+    }).catchError((e) {
+      print(e);
+    });
+  }
+
   _getAddressFromLatLng() async {
     try {
       List<Placemark> p = await geolocator.placemarkFromCoordinates(
@@ -495,4 +645,68 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       print(e);
     }
   }
+
+  showSentHomeDialog(BuildContext context) {
+
+    Widget continueButton = FlatButton(
+      child: Text("Ok"),
+      onPressed:  () {
+        Navigator.of(context, rootNavigator: true).pop('dialog');
+        _makeSentHomeRequest();
+      },
+    );
+
+    Widget cancelButton = FlatButton(
+      child: Text("Cancel"),
+      onPressed:  () {
+        Navigator.of(context, rootNavigator: true).pop('dialog');
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text('You are being sent home by client?'),
+      content: Text("Please click confirm to send alert to Alto"),
+      actions: [
+        continueButton,
+        cancelButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+    showConnectionDialog(BuildContext context) {
+
+
+      Widget continueButton = FlatButton(
+        child: Text("Ok"),
+        onPressed:  () {
+          Navigator.of(context, rootNavigator: true).pop('dialog');
+        },
+      );
+
+      // set up the AlertDialog
+      AlertDialog alert = AlertDialog(
+        title: Text('There\'s been a connection issue!'),
+        content: Text("Please restart the app or try again soon"),
+        actions: [
+          continueButton,
+        ],
+      );
+
+      // show the dialog
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return alert;
+        },
+      );
+    }
 }

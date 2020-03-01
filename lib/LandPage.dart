@@ -45,38 +45,7 @@ class AppState extends State<LandPage> with SingleTickerProviderStateMixin{
 
     getScheduled();
 
-    final List<String> _dropdownValues = [
-      "  ",
-      "One",
-      "Two",
-      "Three",
-      "Four",
-      "Five"
-    ]; //The list of values we want on the dropdown
-    String _currentlySelected = ""; //var to hold currently selected value
 
-    //make the drop down its own widget for readability
-    Widget dropdownWidget() {
-      return DropdownButton(
-        //map each value from the lIst to our dropdownMenuItem widget
-        items: _dropdownValues
-            .map((value) => DropdownMenuItem(
-          child: Text(value),
-          value: value,
-        ))
-            .toList(),
-        onChanged: (String value) {
-          //once dropdown changes, update the state of out currentValue
-          setState(() {
-            _currentlySelected = value;
-          });
-        },
-        //this wont make dropdown expanded and fill the horizontal space
-        isExpanded: false,
-        //make default value of dropdown the first value of our list
-        value: _dropdownValues.first,
-      );
-    }
 
     if((this.shifts == null || this.shifts.isEmpty) && !isLoading){
       isLoading = true;
@@ -107,10 +76,6 @@ class AppState extends State<LandPage> with SingleTickerProviderStateMixin{
           ],
         ),
         title: Text('My Shifts'),
-        actions: <Widget>[
-          //Add the dropdown widget to the `Action` part of our appBar. it can also be among the `leading` part
-          dropdownWidget(),
-        ],
       ),
         backgroundColor: Colors.white,
         body:
@@ -150,11 +115,6 @@ class AppState extends State<LandPage> with SingleTickerProviderStateMixin{
       response = await http.get(AltoUtils.baseHcsUrl + '?action=getOrders&sessionkey='+Home.keyNumber.sessionKey+'&tempId='+tempId+'&status=filled&orderBy1=shiftStart&orderByDirection1=ASC&shiftStart='+yesterday.toIso8601String()+'&resultType=json');
       openResponse = await http.get(AltoUtils.baseHcsUrl + '?action=getOrders&sessionkey='+Home.keyNumber.sessionKey+'&status=open&orderBy1=shiftStart&orderByDirection1=ASC&shiftStart='+now.toIso8601String()+'&resultType=json');
 
-    } on Exception catch (exception) {
-      print(exception);
-    } catch (error) {
-      print(error);
-    }
 
 
     if(response.body.contains('html')) return null;
@@ -168,8 +128,43 @@ class AppState extends State<LandPage> with SingleTickerProviderStateMixin{
 
     this.openShifts.sort((a, b) => a.shiftStartTime.compareTo(b.shiftStartTime));
 
+    } on Exception catch (exception) {
+      print(exception);
+      showConnectionDialog(context);
+    } catch (error) {
+      print(error);
+      showConnectionDialog(context);
+    }
     setState(() {});
 
+  }
+
+  showConnectionDialog(BuildContext context) {
+
+
+    Widget continueButton = FlatButton(
+      child: Text("Ok"),
+      onPressed:  () {
+        Navigator.of(context, rootNavigator: true).pop('dialog');
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text('There\'s been a connection issue!'),
+      content: Text("Please restart the app or try again soon"),
+      actions: [
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
   }
 
 

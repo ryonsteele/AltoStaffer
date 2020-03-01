@@ -424,48 +424,13 @@ class _HomeState extends State<Home> {
       });
     }
 
-    final List<String> _dropdownValues = [
-      "  ",
-      "One",
-      "Two",
-      "Three",
-      "Four",
-      "Five"
-    ]; //The list of values we want on the dropdown
-    String _currentlySelected = ""; //var to hold currently selected value
 
-    //make the drop down its own widget for readability
-    Widget dropdownWidget() {
-      return DropdownButton(
-        //map each value from the lIst to our dropdownMenuItem widget
-        items: _dropdownValues
-            .map((value) => DropdownMenuItem(
-          child: Text(value),
-          value: value,
-        ))
-            .toList(),
-        onChanged: (String value) {
-          //once dropdown changes, update the state of out currentValue
-          setState(() {
-            _currentlySelected = value;
-          });
-        },
-        //this wont make dropdown expanded and fill the horizontal space
-        isExpanded: false,
-        //make default value of dropdown the first value of our list
-        value: _dropdownValues.first,
-      );
-    }
 
     return Scaffold(
         resizeToAvoidBottomPadding: false,
         key: _scaffoldKey,
         appBar: AppBar(
           title: Text('Alto Staffing'),
-          actions: <Widget>[
-            //Add the dropdown widget to the `Action` part of our appBar. it can also be among the `leading` part
-            dropdownWidget(),
-          ],
         ),
         backgroundColor: Theme.of(context).primaryColor,
         body: Column(
@@ -560,6 +525,8 @@ class _HomeState extends State<Home> {
 
   _makePostRequest() async {
 
+    try{
+
     String platform = '';
     if (Platform.isAndroid) {
       platform = 'Android';
@@ -580,12 +547,11 @@ class _HomeState extends State<Home> {
     // this API passes back the id of the new item added to the body
     String body = response.body;
 
-    if(statusCode >= 200 && statusCode < 300){
-
-      if( rememberMe ) {
+    if(statusCode >= 200 && statusCode < 300) {
+      if (rememberMe) {
         prefs.setString('first_key', _email);
         prefs.setString('second_key', _password);
-      }else{
+      } else {
         _emailController.clear();
         _passwordController.clear();
         prefs.setString('first_key', '');
@@ -598,14 +564,19 @@ class _HomeState extends State<Home> {
         final Map<String, dynamic> data = json.decode(body);
         print(data['tempid']);
         prefs.setString('temp_id', data['tempid']);
-        Navigator.push(context, MaterialPageRoute(builder: (context) => LandPage(tempid: data['tempid'])));
-
+        Navigator.push(context, MaterialPageRoute(
+            builder: (context) => LandPage(tempid: data['tempid'])));
       } on FormatException catch (e) {
         print("That string didn't look like Json.");
       } on NoSuchMethodError catch (e) {
         print('That string was null!');
       }
+    }else{
+      showConnectionDialog(context);
+    }
 
+    }on Exception catch (ex) {
+      showConnectionDialog(context);
     }
 
   }
@@ -648,6 +619,34 @@ class _HomeState extends State<Home> {
       ),
       actions: [
         cancelButton,
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  showConnectionDialog(BuildContext context) {
+
+
+    Widget continueButton = FlatButton(
+      child: Text("Ok"),
+      onPressed:  () {
+        Navigator.of(context, rootNavigator: true).pop('dialog');
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text('There\'s been a connection issue!'),
+      content: Text("Please restart the app or try again soon"),
+      actions: [
         continueButton,
       ],
     );
