@@ -11,6 +11,7 @@ import 'package:http/http.dart';
 import 'package:alto_staffing/Home.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:geocoder/geocoder.dart';
 import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
 
 class ShiftDetailView extends StatefulWidget {
@@ -33,8 +34,8 @@ class _ShiftDetailView extends State<ShiftDetailView> {
   String _currentAddress;
   static const int OPEN_SHIFT = 0;
   static const int CHECKED_IN = 1;
-  static const int CHECKED_OUT_BRK = 2;
-  static const int CHECKED_IN_BRK = 3;
+  //static const int CHECKED_OUT_BRK = 2;
+  //static const int CHECKED_IN_BRK = 3;
   static const int CHECKED_OUT = 4;
   static SharedPreferences prefs;
   static Color sliderColor = Colors.blue;
@@ -81,14 +82,14 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       );
     }
     if(currentStatus == CHECKED_IN){
-      title = "Check Out for Break?";
-      content = null;
-    }
-    if(currentStatus == CHECKED_OUT_BRK){
-      title = "Check In from Break?";
-      content = null;
-    }
-    if(currentStatus == CHECKED_IN_BRK){
+//      title = "Check Out for Break?";
+//      content = null;
+//    }
+//    if(currentStatus == CHECKED_OUT_BRK){
+//      title = "Check In from Break?";
+//      content = null;
+//    }
+//    if(currentStatus == CHECKED_IN_BRK){
       title = "Check Out from Shift?";
       content = TextField(
         controller: _textFieldController,
@@ -148,6 +149,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       buttonHeight: 60,
       buttonText: sliderStatus,
       buttonColor: sliderColor,
+      successfulThreshold: 1.0,
       slideButtonIconColor: Color(0xFF05152B),
       radius: 8,
       onSlideSuccessCallback: () {
@@ -500,12 +502,12 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       final liveShift = ApiShift.fromJson(parsed);
 
       if(liveShift.shiftEndTimeActual == null){
-        currentStatus = CHECKED_IN_BRK;
-      }
-      if(liveShift.breakEndTime == null){
-        currentStatus = CHECKED_OUT_BRK;
-      }
-      if(liveShift.breakStartTime == null){
+//        currentStatus = CHECKED_IN_BRK;
+//      }
+//      if(liveShift.breakEndTime == null){
+//        currentStatus = CHECKED_OUT_BRK;
+//      }
+//      if(liveShift.breakStartTime == null){
         currentStatus = CHECKED_IN;
       }
       if(liveShift.shiftStartTimeActual == null){
@@ -581,16 +583,16 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       statusColor = Colors.lightGreen;
       sliderColor = Colors.lightGreen;
     }
-    if(stat == CHECKED_IN_BRK){
-      statusText = 'ON SHIFT';
-      statusColor = Colors.lightGreen;
-      sliderColor = Colors.lightGreen;
-    }
-    if(stat == CHECKED_OUT_BRK){
-      statusText = 'BREAK';
-      statusColor = Colors.yellow;
-      sliderColor = Colors.yellow;
-    }
+//    if(stat == CHECKED_IN_BRK){
+//      statusText = 'ON SHIFT';
+//      statusColor = Colors.lightGreen;
+//      sliderColor = Colors.lightGreen;
+//    }
+//    if(stat == CHECKED_OUT_BRK){
+//      statusText = 'BREAK';
+//      statusColor = Colors.yellow;
+//      sliderColor = Colors.yellow;
+//    }
     if(stat == CHECKED_OUT){
       statusText = 'SHIFT END';
       statusColor = Colors.blueGrey;
@@ -628,17 +630,21 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
   _getAddressFromLatLng() async {
     try {
+
+      var coordinates = new Coordinates(_currentPosition.latitude, _currentPosition.longitude);
+      var addresses = await Geocoder.local.findAddressesFromCoordinates(coordinates);
+      var first = addresses.first;
+      print("${first.featureName} : ${first.addressLine}");
+
+
       List<Placemark> p = await geolocator.placemarkFromCoordinates(
           _currentPosition.latitude, _currentPosition.longitude);
 
-      Placemark place = p[0];
-      _currentAddress =
-      "${place.locality}, ${place.postalCode}, ${place.country}";
       if(currentStatus == OPEN_SHIFT) {
-        _makePostRequest(_currentAddress, _currentPosition.latitude,
+        _makePostRequest(first.addressLine, _currentPosition.latitude,
             _currentPosition.longitude);
       }else{
-        _makePatchRequest(_currentAddress, _currentPosition.latitude,
+        _makePatchRequest(first.addressLine, _currentPosition.latitude,
             _currentPosition.longitude);
       }
     } catch (e) {

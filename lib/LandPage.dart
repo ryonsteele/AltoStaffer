@@ -4,9 +4,11 @@ import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
 import 'models/shifts.dart';
 import 'package:alto_staffing/Home.dart';
+import 'ShiftPrefPage.dart';
 import 'dart:convert';
 import 'ShiftCard.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
+import 'ContactPage.dart';
 import 'models/Specs.dart';
 
 class LandPage extends StatefulWidget {
@@ -45,16 +47,58 @@ class AppState extends State<LandPage> with SingleTickerProviderStateMixin{
 
     getScheduled();
 
+    final List<String> _dropdownValues = [
+      "  ",
+      "Contact Alto",
+      "Shift Preferences",
+    ]; //The list of values we want on the dropdown
+    String _currentlySelected = ""; //var to hold currently selected value
+
+    //make the drop down its own widget for readability
+    Widget dropdownWidget() {
+      return DropdownButton(
+        //map each value from the lIst to our dropdownMenuItem widget
+        items: _dropdownValues
+            .map((value) => DropdownMenuItem(
+          child: Text(value),
+          value: value,
+        ))
+            .toList(),
+        onChanged: (String value) {
+          //once dropdown changes, update the state of out currentValue
+          setState(() {
+            _currentlySelected = value;
+            if(!_currentlySelected.trim().isEmpty){
+
+              if(_currentlySelected.trim() == "Contact Alto"){
+                Navigator.push(context, MaterialPageRoute(
+                    builder: (context) => ContactPage()));
+
+              }else if(_currentlySelected.trim() == "Shift Preferences"){
+                Navigator.push(context, MaterialPageRoute(
+                    builder: (context) => ShiftPrefPage(tempid: AppState.tempId)));
+              }
+            }
+          });
+        },
+        //this wont make dropdown expanded and fill the horizontal space
+        isExpanded: false,
+        //make default value of dropdown the first value of our list
+        value: _dropdownValues.first,
+      );
+    }
+
 
 
     if((this.shifts == null || this.shifts.isEmpty) && !isLoading){
       isLoading = true;
       return MaterialApp(
+          debugShowCheckedModeBanner: false,
           home: Scaffold(
             body: SpinKitSquareCircle(
         color: Color(0xFF05152B),
         size: 100.0,
-        controller: AnimationController(vsync: this, duration: const Duration(milliseconds: 4800)),
+        controller: AnimationController(vsync: this, duration: const Duration(milliseconds: 7800)),
       ),
       )
       );
@@ -62,13 +106,18 @@ class AppState extends State<LandPage> with SingleTickerProviderStateMixin{
 
 
     return MaterialApp(
+        debugShowCheckedModeBanner: false,
         home: DefaultTabController(
         length: 2,
         child: Scaffold(
         resizeToAvoidBottomPadding: false,
         key: _scaffoldKey,
           appBar: AppBar(
-        backgroundColor: Theme.of(context).primaryColor,
+            actions: <Widget>[
+              //Add the dropdown widget to the `Action` part of our appBar. it can also be among the `leading` part
+              dropdownWidget(),
+            ],
+            backgroundColor: Theme.of(context).primaryColor,
         bottom: TabBar(
           tabs: [
             Tab(icon: Icon(Icons.calendar_today)),
@@ -110,11 +159,8 @@ class AppState extends State<LandPage> with SingleTickerProviderStateMixin{
     Response response;
     Response openResponse;
     try {
-      final now = new DateTime.now();
-      final yesterday = new DateTime(now.year, now.month, now.day - 1);
-      response = await http.get(AltoUtils.baseHcsUrl + '?action=getOrders&sessionkey='+Home.keyNumber.sessionKey+'&tempId='+tempId+'&status=filled&orderBy1=shiftStart&orderByDirection1=ASC&shiftStart='+yesterday.toIso8601String()+'&resultType=json');
-      openResponse = await http.get(AltoUtils.baseHcsUrl + '?action=getOrders&sessionkey='+Home.keyNumber.sessionKey+'&status=open&orderBy1=shiftStart&orderByDirection1=ASC&shiftStart='+now.toIso8601String()+'&resultType=json');
-
+      response = await http.get(AltoUtils.baseApiUrl + '/mobileshifts/scheduled/' + tempId);
+      openResponse = await http.get(AltoUtils.baseApiUrl + '/mobileshifts/open/' + tempId);
 
 
     if(response.body.contains('html')) return null;

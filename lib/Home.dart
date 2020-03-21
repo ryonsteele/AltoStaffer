@@ -562,10 +562,15 @@ class _HomeState extends State<Home> {
 
       try {
         final Map<String, dynamic> data = json.decode(body);
-        print(data['tempid']);
-        prefs.setString('temp_id', data['tempid']);
+        String tempid = data['tempid'];
+        if (tempid == null || tempid.isEmpty){
+          showConnectionDialog(context);
+          return;
+        }
+        //print(tempid); //debug
+        prefs.setString('temp_id', tempid);
         Navigator.push(context, MaterialPageRoute(
-            builder: (context) => LandPage(tempid: data['tempid'])));
+            builder: (context) => LandPage(tempid: tempid)));
       } on FormatException catch (e) {
         print("That string didn't look like Json.");
       } on NoSuchMethodError catch (e) {
