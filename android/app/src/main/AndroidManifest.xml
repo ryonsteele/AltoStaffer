@@ -10,7 +10,7 @@
 
     <application
         android:name="io.flutter.app.FlutterApplication"
-        android:label="alto_staffing"
+        android:label="Alto Healthcare Staffing"
         android:icon="@mipmap/launcher_icon">
         <activity
             android:name=".MainActivity"

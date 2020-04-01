@@ -1,12 +1,12 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
-import 'package:flutter_multiselect/flutter_multiselect.dart';
-import 'dart:convert';
-import 'models/Specs.dart';
 import 'package:alto_staffing/MultiSelectDialogItem.dart';
-import 'models/SpecsList.dart';
-import 'clipper.dart';
+import 'AltoUtils.dart';
+import 'Home.dart';
+import 'MultiSelectChip.dart';
 
 class AppPage extends StatefulWidget {
   @override
@@ -17,18 +17,26 @@ class AppState extends State<AppPage> {
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   TextEditingController fnameController = new TextEditingController();
   TextEditingController lnameController = new TextEditingController();
-  TextEditingController ssnController = new TextEditingController();
+  //TextEditingController ssnController = new TextEditingController();
   TextEditingController streetController = new TextEditingController();
   TextEditingController cityController = new TextEditingController();
   TextEditingController stateController = new TextEditingController();
+  TextEditingController zipController = new TextEditingController();
+  TextEditingController pPhoneController = new TextEditingController();
+  TextEditingController sPhoneController = new TextEditingController();
   String fname;
   String lname;
-  String ssn;
+  // String ssn;
   String street;
   String city;
   String state;
+  String zip;
+  String primaryPhone;
+  String secondaryPhone;
   List specDatasource;
-  List multiSelect;
+  List<String> multiSelectSpec = List();
+  List<String> multiSelectCerts = List();
+
 
   bool _obsecure = false;
 
@@ -136,49 +144,78 @@ class AppState extends State<AppPage> {
       );
     }
 
-    Widget _showMultiSelect()  {
-      final items = <MultiSelectDialogItem<int>>[
-        MultiSelectDialogItem(1, 'Dog'),
-        MultiSelectDialogItem(2, 'Cat'),
-        MultiSelectDialogItem(3, 'Mouse'),
-        MultiSelectDialogItem(4, 'Mouse'),
-        MultiSelectDialogItem(5, 'Mouse'),
-        MultiSelectDialogItem(6, 'Mouse'),
-        MultiSelectDialogItem(7, 'Mouse'),
-        MultiSelectDialogItem(8, 'Mouse'),
-        MultiSelectDialogItem(9, 'Mouse'),
-        MultiSelectDialogItem(10, 'Mouse'),
-        MultiSelectDialogItem(11, 'Mouse'),
-      ];
+    Future<Widget> _showMultiSelectSpec()  async {
 
-      final selectedValues = showDialog<Set<int>>(
-        context: context,
-        builder: (context) {
-          return MultiSelectDialog(
-            items: items,
-            initialSelectedValues: [1, 3].toSet(),
-          );
-        },
-      );
-
-      print(selectedValues);
+      final speclist = AltoUtils.getSpecs();
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            //Here we will build the content of the dialog
+            return AlertDialog(
+              title: Text("Scroll & Select All Specializations"),
+            content:SingleChildScrollView(
+            child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: <Widget>[ MultiSelectChip(
+                speclist,
+                onSelectionChanged: (selectedList) {
+                  setState(() {
+                    multiSelectSpec = selectedList;
+                  });
+                },
+               ),],),),
+              actions: <Widget>[
+                FlatButton(
+                  child: Text("Select"),
+                  onPressed: () => Navigator.of(context).pop(),
+                )
+              ],
+            );
+          });
     }
 
+    Future<Widget> _showMultiSelectCerts()  async {
+
+      final certlist = AltoUtils.getCerts();
+      showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            //Here we will build the content of the dialog
+            return AlertDialog(
+              title: Text("Scroll & Select All Certifications"),
+              content:SingleChildScrollView(
+              child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[ MultiSelectChip(
+                certlist,
+                onSelectionChanged: (selectedList) {
+                  setState(() {
+                    multiSelectCerts = selectedList;
+                  });
+                },
+               ),],),),
+              actions: <Widget>[
+                FlatButton(
+                  child: Text("Select"),
+                  onPressed: () => Navigator.of(context).pop(),
+                )
+              ],
+            );
+          });
+    }
 
     void validSubmit() {
       fname = fnameController.text;
       lname = lnameController.text;
-      ssn = ssnController.text;
+      // ssn = ssnController.text;
       street = streetController.text;
       city = cityController.text;
       state = stateController.text;
+      zip = zipController.text;
+      primaryPhone = pPhoneController.text;
+      secondaryPhone = sPhoneController.text;
+      _makePostRequest();
 
-      fnameController.clear();
-      lnameController.clear();
-      ssnController.clear();
-      streetController.clear();
-      cityController.clear();
-      stateController.clear();
     }
 
 
@@ -214,45 +251,50 @@ class AppState extends State<AppPage> {
                     child: _inputBlank( "Last Name",
                         lnameController, false),
                   ),
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 20),
-                    child: _inputBlank( "Social Secuity #",
-                        ssnController, true),
-                  ),
+//                  Padding(
+//                    padding: EdgeInsets.only(bottom: 20),
+//                    child: _inputBlank( "Social Secuity #",
+//                        ssnController, true),
+//                  ),
                   Padding(
                     padding: EdgeInsets.only(bottom: 20),
                     child: _inputBlank( "Street",
-                        streetController, true),
+                        streetController, false),
                   ),
                   Padding(
                     padding: EdgeInsets.only(bottom: 20),
                     child: _inputBlank( "City",
-                        cityController, true),
+                        cityController, false),
                   ),
                   Padding(
                     padding: EdgeInsets.only(bottom: 20),
                     child: _inputBlank( "State",
-                        stateController, true),
+                        stateController, false),
                   ),
                   Padding(
                     padding: EdgeInsets.only(bottom: 20),
                     child: _inputBlank( "Zip",
-                        stateController, true),
+                        zipController, false),
                   ),
                   Padding(
                     padding: EdgeInsets.only(bottom: 20),
                     child: _inputBlank( "Primary Phone #",
-                        stateController, true),
+                        pPhoneController, false),
                   ),
                   Padding(
                     padding: EdgeInsets.only(bottom: 20),
                     child: _inputBlank( "Secondary Phone #",
-                        stateController, true),
+                        sPhoneController, false),
                   ),
                   Padding(
-                    padding: EdgeInsets.only(bottom: 20),
-                    child: _button("Specs", Colors.white, primary,
-                        primary, Colors.white, _showMultiSelect),
+                    padding: EdgeInsets.only(bottom: 20, left: 20, right: 20),
+                    child: _button("Specialization", Colors.white, primary,
+                        primary, Colors.white, _showMultiSelectSpec),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.only(bottom: 20, left: 20, right: 20),
+                    child: _button("Certification", Colors.white, primary,
+                        primary, Colors.white, _showMultiSelectCerts),
                   ),
                   SizedBox(
                     height: 20,
@@ -277,6 +319,110 @@ class AppState extends State<AppPage> {
             ),
 
         );
+  }
+
+
+  Future _makePostRequest() async {
+
+    try{
+      // set up POST request arguments
+      String url = AltoUtils.baseApiUrl + '/apply';
+      Map<String, String> headers = {"Content-type": "application/json"};
+
+      String json = '{"firstname": "'+ this.fname.trim()+'", "email": "'+Home.myUserName.trim()+'",' +'"lastname": "'+ this.lname.trim()+
+          '",' +'"street": "'+ this.street.trim()+'",' +'"city": "'+ this.city.trim()+ '",' +'"state": "'+ this.state.trim()+
+          '", "zip": "'+ zip.trim() + '", "certs": '+ jsonEncode(this.multiSelectCerts) +', "specs": '+ jsonEncode(this.multiSelectSpec)
+          +', "primary": "'+ this.primaryPhone.trim()+'", "secondary": "'+ this.secondaryPhone.trim()+'"}';
+
+      // make POST request
+       print(json);
+      Response response = await post(url, headers: headers, body: json);
+      // check the status code for the result
+      int statusCode = response.statusCode;
+      // this API passes back the id of the new item added to the body
+      String body = response.body;
+
+      if(statusCode >= 200 && statusCode < 300) {
+
+        fnameController.clear();
+        lnameController.clear();
+        //ssnController.clear();
+        streetController.clear();
+        cityController.clear();
+        stateController.clear();
+        zipController.clear();
+        pPhoneController.clear();
+        sPhoneController.clear();
+        multiSelectCerts.clear();
+        multiSelectSpec.clear();
+
+      }else{
+        showConnectionDialog(context);
+      }
+
+    } on Exception catch (exception) {
+      print(exception);
+      showConnectionDialog(context);
+    } catch (error) {
+      print(error);
+      showConnectionDialog(context);
+    }
+    setState(() {});
+  }
+
+
+  showConnectionDialog(BuildContext context) {
+
+    Widget continueButton = FlatButton(
+      child: Text("Ok"),
+      onPressed:  () {
+        Navigator.of(context, rootNavigator: true).pop('dialog');
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text('There\'s been a connection issue!'),
+      content: Text("Please check you network, restart the app or try again soon"),
+      actions: [
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  showSuccessDialog(BuildContext context) {
+
+    Widget continueButton = FlatButton(
+      child: Text("Ok"),
+      onPressed:  () {
+        Navigator.of(context, rootNavigator: true).pop('dialog');
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text('Your Application has been recieved.'),
+      content: Text("Thank you for applying!"),
+      actions: [
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
   }
 
 

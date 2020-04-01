@@ -42,7 +42,7 @@ class _HomeState extends State<Home> {
   void initState() {
     super.initState();
     loadPrefs();
-    getSessionKey();
+   // getSessionKey();
 
 
 
@@ -162,6 +162,7 @@ class _HomeState extends State<Home> {
     void _registerUser() {
       _email = _emailController.text;
       _password = _passwordController.text;
+      Home.myUserName = _email.trim();
       _emailController.clear();
       _passwordController.clear();
       navigateToApplication(context);
@@ -390,11 +391,6 @@ class _HomeState extends State<Home> {
                         ),
                         child: _input(Icon(Icons.email), "EMAIL",
                             _emailController, false),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.only(bottom: 20),
-                        child: _input(Icon(Icons.lock), "PASSWORD",
-                            _passwordController, true),
                       ),
                       Padding(
                         padding: EdgeInsets.only(

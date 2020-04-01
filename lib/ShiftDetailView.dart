@@ -5,6 +5,7 @@ import 'package:alto_staffing/models/shifts.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
+import 'dart:core';
 import 'package:alto_staffing/models/ApiShift.dart';
 import 'package:sliding_button/sliding_button.dart';
 import 'package:http/http.dart';
@@ -28,12 +29,14 @@ class ShiftDetailView extends StatefulWidget {
 class _ShiftDetailView extends State<ShiftDetailView> {
 
   final GlobalKey<SlidingButtonState> _slideButtonKey = GlobalKey<SlidingButtonState>();
-  TextEditingController _textFieldController = TextEditingController();
+  TextEditingController _fNameFieldController = TextEditingController();
+  TextEditingController _lNameFieldController = TextEditingController();
+  TextEditingController _titleFieldController = TextEditingController();
   final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
   Position _currentPosition;
-  String _currentAddress;
   static const int OPEN_SHIFT = 0;
   static const int CHECKED_IN = 1;
+  static const int CLOCKIN_WINDOW = 10;
   //static const int CHECKED_OUT_BRK = 2;
   //static const int CHECKED_IN_BRK = 3;
   static const int CHECKED_OUT = 4;
@@ -71,76 +74,63 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
   showAlertDialog(BuildContext context) {
 
-    String title = "";
-    TextField content;
-
-    if(currentStatus == OPEN_SHIFT){
-      title = "Check In for Shift?";
-      content = TextField(
-        controller: _textFieldController,
-        decoration: InputDecoration(hintText: "Supervisor Initials..."),
-      );
-    }
-    if(currentStatus == CHECKED_IN){
-//      title = "Check Out for Break?";
-//      content = null;
-//    }
-//    if(currentStatus == CHECKED_OUT_BRK){
-//      title = "Check In from Break?";
-//      content = null;
-//    }
-//    if(currentStatus == CHECKED_IN_BRK){
-      title = "Check Out from Shift?";
-      content = TextField(
-        controller: _textFieldController,
-        decoration: InputDecoration(hintText: "Supervisor Initials..."),
-      );
-    }
-
     setState(() {});
 
+    Dialog errorDialog = Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)), //this right here
+      child: Container(
+        height: 300.0,
+        width: 300.0,
 
-    // set up the buttons
-    Widget cancelButton = FlatButton(
-      child: Text("Cancel"),
-      onPressed:  () {
-        Navigator.of(context, rootNavigator: true).pop('dialog');
-      },
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+            Padding(
+              padding:  EdgeInsets.all(3.0),
+              child: TextField(
+                controller: _fNameFieldController,
+                decoration: InputDecoration(hintText: "Supervisor FirstName"),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(3.0),
+              child: TextField(
+                controller: _lNameFieldController,
+                decoration: InputDecoration(hintText: "Supervisor LastName"),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(3.0),
+              child: TextField(
+                controller: _titleFieldController,
+                decoration: InputDecoration(hintText: "Supervisor Title"),
+              ),
+            ),
+            Padding(padding: EdgeInsets.only(top: 7.0)),
+            FlatButton(onPressed: (){
+              if(_fNameFieldController.text == null || _fNameFieldController.text.isEmpty ||
+                  _lNameFieldController.text == null || _lNameFieldController.text.isEmpty ||
+                  _titleFieldController.text == null || _titleFieldController.text.isEmpty){
+                return;
+              }
+              Navigator.of(context, rootNavigator: true).pop('dialog');
+              if(this.data.status == 'Open'){
+                _postShiftInterest();
+                return;
+              }
+              _getCurrentLocation();
+              if(currentStatus >= CHECKED_OUT){
+                myButton = null;
+                setState(() {});
+              }
+            },
+                child: Text('OK', style: TextStyle(color: Colors.purple, fontSize: 18.0),))
+          ],
+        ),
+      ),
     );
-    Widget continueButton = FlatButton(
-      child: Text("Confirm"),
-      onPressed:  () {
-        if(this.data.status == 'Open'){
-          _postShiftInterest();
-          return;
-        }
 
-        Navigator.of(context, rootNavigator: true).pop('dialog');
-        _getCurrentLocation();
-        if(currentStatus >= CHECKED_OUT){
-          myButton = null;
-          setState(() {});
-        }
-       },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text(title),
-      content: content,
-      actions: [
-        cancelButton,
-        continueButton,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
+    showDialog(context: context, builder: (BuildContext context) => errorDialog);
   }
 
   SlidingButton getMyButton(){
@@ -166,6 +156,10 @@ class _ShiftDetailView extends State<ShiftDetailView> {
         });
         },);
   }
+
+
+
+
 
 
   @override
@@ -355,10 +349,11 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     // set up POST request arguments
     String url = AltoUtils.baseApiUrl + '/shift';
     Map<String, String> headers = {"Content-type": "application/json"};
+    var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
     String json = '{"tempId": "'+ this.data.tempId+'", "username": "'+Home.myUserName+'",' +'"clockedAddy": "'+ currentAddy+
         '",' +'"lat": "'+ lat.toString()+'",' +'"lon": "'+ lon.toString()+ '",' +'"shiftstatuskey": "'+ currentStatus.toString()+
-        '", "shiftSignoff": "'+ _textFieldController.text+ '", "orderId": "'+ this.data.orderId+'"}';
+        '", "shiftSignoff": "'+ signOff + '", "orderId": "'+ this.data.orderId+'", "clientId": "'+ this.data.clientId+'"}';
 
     // make POST request
    // print(json);
@@ -368,10 +363,11 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     // this API passes back the id of the new item added to the body
     String body = response.body;
 
-    if(statusCode >= 200 && statusCode < 300){
+    if(statusCode >= 200 && statusCode < 300) {
       currentStatus = CHECKED_IN;
       Navigator.of(context).pop();
-      //_setStatusText(currentStatus);
+    }else if(statusCode == 400){
+      showInvalidGeoDialog(context);
     }else{
       showConnectionDialog(context);
     }
@@ -431,9 +427,14 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     String url = AltoUtils.baseApiUrl + '/shift';
     Map<String, String> headers = {"Content-type": "application/json"};
 
-    String json = '{"tempId": "'+ this.data.tempId+'", "username": "'+Home.myUserName+'",' +' "clockedAddy": "'+ currentAddy+
-        '",' +' "lat": "'+ lat.toString()+'",' +' "lon": "'+ lon.toString()+ '",' +'"shiftstatuskey": "'+ currentStatus.toString()+
-        '", "shiftSignoff": "'+ _textFieldController.text+ '", "orderId": "'+ this.data.orderId+'"}';
+    var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
+
+    String json = '{"tempId": "'+ this.data.tempId+'", "username": "'+Home.myUserName+'",' +'"clockedAddy": "'+ currentAddy+
+        '",' +'"lat": "'+ lat.toString()+'",' +'"lon": "'+ lon.toString()+ '",' +'"shiftstatuskey": "'+ currentStatus.toString()+
+        '", "shiftSignoff": "'+ signOff + '", "orderId": "'+ this.data.orderId+'", "clientId": "'+ this.data.clientId+'"}';
+
+    print(json);
+    print(url);
 
     // make POST request
     Response response = await patch(url, headers: headers, body: json);
@@ -444,11 +445,12 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
     if(statusCode >= 200 && statusCode < 300){
       currentStatus++;
-      //_setStatusText(currentStatus);
       if(currentStatus >= CHECKED_OUT){
         myButton = null;
       }
       Navigator.of(context).pop();
+    }else if(statusCode == 400){
+      showInvalidGeoDialog(context);
     }else{
       showConnectionDialog(context);
     }
@@ -487,12 +489,11 @@ class _ShiftDetailView extends State<ShiftDetailView> {
           _setStatusText(currentStatus);
           var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
           var date2 = DateTime.now();
-          var difference = date2.difference(newDateTimeObj2).inHours;
+          var difference = date2.difference(newDateTimeObj2).inMinutes;
           // currently set to allow clockin two hours after shift start
-          if( difference <= 2) {
+          if( difference.abs() <= CLOCKIN_WINDOW) {
             myButton = getMyButton();
           }
-          myButton = getMyButton();
         });
 
         return;
@@ -514,15 +515,14 @@ class _ShiftDetailView extends State<ShiftDetailView> {
         currentStatus = OPEN_SHIFT;
       }
 
-      setState(() {
-        _setStatusText(currentStatus);
-        myButton = getMyButton();
-      });
 
-
-      if(currentStatus >= CHECKED_OUT){
+      if(liveShift.shiftEndTimeActual != null){
+        currentStatus = CHECKED_OUT;
         myButton = null;
       }
+      setState(() {
+        _setStatusText(currentStatus);
+      });
     }else{
       showConnectionDialog(context);
     }
@@ -603,8 +603,9 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       statusText = 'OPEN';
       statusColor = Colors.blue;
       sliderColor = Colors.blue;
+    }else {
+      myButton = getMyButton();
     }
-    myButton = getMyButton();
   }
 
   _getCurrentLocation() {
@@ -688,7 +689,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     );
   }
 
-    showConnectionDialog(BuildContext context) {
+  showConnectionDialog(BuildContext context) {
 
 
       Widget continueButton = FlatButton(
@@ -701,7 +702,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       // set up the AlertDialog
       AlertDialog alert = AlertDialog(
         title: Text('There\'s been a connection issue!'),
-        content: Text("Please restart the app or try again soon"),
+        content: Text("Please check you network, restart the app or try again soon"),
         actions: [
           continueButton,
         ],
@@ -715,4 +716,32 @@ class _ShiftDetailView extends State<ShiftDetailView> {
         },
       );
     }
+
+  showInvalidGeoDialog(BuildContext context) {
+
+
+    Widget continueButton = FlatButton(
+      child: Text("Ok"),
+      onPressed:  () {
+        Navigator.of(context, rootNavigator: true).pop('dialog');
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text('Invalid GPS Location'),
+      content: Text("Your device is reporting it is not at the correct location. \nThis attempt has been recorded."),
+      actions: [
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
 }

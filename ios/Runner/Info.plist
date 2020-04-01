@@ -11,7 +11,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>alto_staffing</string>
+	<string>Alto Healthcare Staffing</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -22,8 +22,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSLocationAlwaysUsageDescription</key>
+    <string>This app needs to able to send GPS location to the company owned API to evaluate if the person is at the designated location for starting designated, agreed upon shift i.a.w. state law and company policy and procedure.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>This app needs access to location when open.</string>
+	<string>This app needs to able to send GPS location to the company owned API to evaluate if the person is at the designated location for starting designated, agreed upon shift i.a.w. state law and company policy and procedure.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
