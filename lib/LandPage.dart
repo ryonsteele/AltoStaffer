@@ -1,7 +1,10 @@
+
+
 import 'package:alto_staffing/AltoUtils.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'models/shifts.dart';
 import 'package:alto_staffing/Home.dart';
 import 'ShiftPrefPage.dart';
@@ -20,10 +23,10 @@ class LandPage extends StatefulWidget {
   AppState createState() => AppState(this.tempid);
 }
 
-class AppState extends State<LandPage> with SingleTickerProviderStateMixin{
+class AppState extends State<LandPage> with TickerProviderStateMixin{
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   static String tempId = "";
-  static bool isLoading = false;
+  static SharedPreferences prefs;
   List shifts;
   List openShifts;
 
@@ -33,24 +36,28 @@ class AppState extends State<LandPage> with SingleTickerProviderStateMixin{
 
   @override
   void initState() {
-    isLoading = false;
     if(this.shifts != null) {
       this.shifts.clear();
       this.shifts = null;
     }
+    if(this.openShifts != null) {
+      this.openShifts.clear();
+      this.openShifts = null;
+    }
+    getScheduled();
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    Color primary = Theme.of(context).primaryColor;
 
-    getScheduled();
+
 
     final List<String> _dropdownValues = [
       "  ",
       "Contact Alto",
       "Shift Preferences",
+      "Logout",
     ]; //The list of values we want on the dropdown
     String _currentlySelected = ""; //var to hold currently selected value
 
@@ -77,6 +84,10 @@ class AppState extends State<LandPage> with SingleTickerProviderStateMixin{
               }else if(_currentlySelected.trim() == "Shift Preferences"){
                 Navigator.push(context, MaterialPageRoute(
                     builder: (context) => ShiftPrefPage(tempid: AppState.tempId)));
+
+              }else if(_currentlySelected.trim() == "Logout"){
+                Navigator.pushReplacement(context, MaterialPageRoute(
+                    builder: (context) => Home()));
               }
             }
           });
@@ -85,22 +96,6 @@ class AppState extends State<LandPage> with SingleTickerProviderStateMixin{
         isExpanded: false,
         //make default value of dropdown the first value of our list
         value: _dropdownValues.first,
-      );
-    }
-
-
-
-    if((this.shifts == null || this.shifts.isEmpty) && !isLoading){
-      isLoading = true;
-      return MaterialApp(
-          debugShowCheckedModeBanner: false,
-          home: Scaffold(
-            body: SpinKitSquareCircle(
-        color: Color(0xFF05152B),
-        size: 100.0,
-        controller: AnimationController(vsync: this, duration: const Duration(milliseconds: 7800)),
-      ),
-      )
       );
     }
 
@@ -117,8 +112,16 @@ class AppState extends State<LandPage> with SingleTickerProviderStateMixin{
               //Add the dropdown widget to the `Action` part of our appBar. it can also be among the `leading` part
               dropdownWidget(),
             ],
-            backgroundColor: Theme.of(context).primaryColor,
+            backgroundColor: Color(0xFF0B859E),
         bottom: TabBar(
+          onTap: (index) {
+            if(index == 0){
+              getScheduled();
+
+            }else if(index ==1 ){
+              getOpens();
+            }
+          },
           tabs: [
             Tab(icon: Icon(Icons.calendar_today)),
             Tab(icon: Icon(Icons.local_offer)),
@@ -129,51 +132,65 @@ class AppState extends State<LandPage> with SingleTickerProviderStateMixin{
         backgroundColor: Colors.white,
         body:
         TabBarView(
+          physics: NeverScrollableScrollPhysics(),
           children: [
         Center(
-        child: ListView.builder(
-        itemCount: this.shifts.length,
-//            padding: const EdgeInsets.only(top: 10.0),
-            itemBuilder: (context, index) {
-              return ShiftCard(this.shifts[index]);
-            })
+        child: loadingListView(this.shifts),
         ),
           Center(
-              child: ListView.builder(
-                  itemCount: this.openShifts.length,
-//            padding: const EdgeInsets.only(top: 10.0),
-                  itemBuilder: (context, index) {
-                    return ShiftCard(this.openShifts[index]);
-                  })
+              child: loadingListView(this.openShifts),
           ),
           ],
         ),
         )));
   }
 
-//todo api impl
   Future getScheduled() async {
     if(this.shifts != null && this.shifts.isNotEmpty) return;
     this.shifts = new List<Shifts>();
-    this.openShifts = new List<Shifts>();
     Response response;
-    Response openResponse;
     try {
+      if(tempId == null || tempId.isEmpty){
+        prefs = await SharedPreferences.getInstance();
+        tempId = prefs.getString('temp_id') ?? '';
+      }
+
       response = await http.get(AltoUtils.baseApiUrl + '/mobileshifts/scheduled/' + tempId);
-      openResponse = await http.get(AltoUtils.baseApiUrl + '/mobileshifts/open/' + tempId);
 
 
     if(response.body.contains('html')) return null;
     //print(response.body);
+      setState(() {
+        this.shifts=(json.decode(response.body) as List).map((i) =>
+            Shifts.fromJson(i)).toList();
+      });
 
-    this.shifts=(json.decode(response.body) as List).map((i) =>
-        Shifts.fromJson(i)).toList();
 
-    this.openShifts=(json.decode(openResponse.body) as List).map((i) =>
-        Shifts.fromJson(i)).toList();
+    } on Exception catch (exception) {
+      print(exception);
+      showConnectionDialog(context);
+    } catch (error) {
+      print(error);
+      showConnectionDialog(context);
+    }
+  }
 
-    this.openShifts.sort((a, b) => a.shiftStartTime.compareTo(b.shiftStartTime));
+  Future getOpens() async {
+    if(this.openShifts != null && this.openShifts.isNotEmpty) return;
+    this.openShifts = new List<Shifts>();
+    Response openResponse;
+    try {
+      openResponse = await http.get(AltoUtils.baseApiUrl + '/mobileshifts/open/' + tempId);
 
+      if(openResponse.body.contains('html')) {
+        print(openResponse.body);
+        return null;
+      }
+
+        this.openShifts=(json.decode(openResponse.body) as List).map((i) =>
+            Shifts.fromJson(i)).toList();
+
+        this.openShifts.sort((a, b) => a.shiftStartTime.compareTo(b.shiftStartTime));
     } on Exception catch (exception) {
       print(exception);
       showConnectionDialog(context);
@@ -185,8 +202,27 @@ class AppState extends State<LandPage> with SingleTickerProviderStateMixin{
 
   }
 
-  showConnectionDialog(BuildContext context) {
+  loadingListView(List items) {
+    if(items != null && items.isNotEmpty){
 
+      return ListView.builder(
+          itemCount: items != null ? items.length : 0,
+          itemBuilder: (context, index) {
+            return ShiftCard(items[index]);
+          });
+
+    }else{
+
+      return ListView.builder(
+          itemCount: 1,
+          itemBuilder: (context, index) {
+            return Text("Loading....");
+          });
+
+    }
+  }
+
+  showConnectionDialog(BuildContext context) {
 
     Widget continueButton = FlatButton(
       child: Text("Ok"),
@@ -194,7 +230,6 @@ class AppState extends State<LandPage> with SingleTickerProviderStateMixin{
         Navigator.of(context, rootNavigator: true).pop('dialog');
       },
     );
-
     // set up the AlertDialog
     AlertDialog alert = AlertDialog(
       title: Text('There\'s been a connection issue!'),
@@ -203,7 +238,6 @@ class AppState extends State<LandPage> with SingleTickerProviderStateMixin{
         continueButton,
       ],
     );
-
     // show the dialog
     showDialog(
       context: context,
@@ -212,7 +246,5 @@ class AppState extends State<LandPage> with SingleTickerProviderStateMixin{
       },
     );
   }
-
-
 
 }

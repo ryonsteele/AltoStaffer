@@ -35,10 +35,7 @@ class ShiftCardState extends State<ShiftCard> {
         child: InkWell(
             splashColor: Colors.grey,
             onTap: () async {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => ShiftDetailView(data: this.baby)),
-              );
+              Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => ShiftDetailView(data: this.baby)));
             },
 
 

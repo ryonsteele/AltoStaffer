@@ -1,6 +1,9 @@
 
 
 import 'package:alto_staffing/AltoUtils.dart';
+import 'package:alto_staffing/LandPage.dart';
+import 'package:alto_staffing/models/ClientAddress.dart';
+import 'package:back_button_interceptor/back_button_interceptor.dart';
 import 'package:alto_staffing/models/shifts.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -14,6 +17,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geocoder/geocoder.dart';
 import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
+import 'package:maps_launcher/maps_launcher.dart';
 
 class ShiftDetailView extends StatefulWidget {
 
@@ -46,11 +50,13 @@ class _ShiftDetailView extends State<ShiftDetailView> {
   static MaterialColor statusColor = Colors.lightBlue;
   static String sliderStatus = "Slide to Change Status...";
   SlidingButton myButton;
+  ClientAddress myClientAddy = new ClientAddress("","","","","","","");
 
   static int currentStatus = 0;
 
   List<String> litems;
   Shifts data;
+  String gTempId;
 
   _ShiftDetailView(Shifts data) {
     this.data = data;
@@ -58,6 +64,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
   }
 
   Future loadInit() async {
+
 
     if(this.data.status == 'Open') {
       sliderColor = Colors.orangeAccent;
@@ -67,10 +74,31 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       _makeInterestGetRequest();
       return;
     }
+    _getClient();
     _getCurrentLocationInit();
     _makeGetRequest();
+
   }
 
+
+  @override
+  void initState() {
+    super.initState();
+    BackButtonInterceptor.add(myInterceptor);
+  }
+
+  @override
+  void dispose() {
+    BackButtonInterceptor.remove(myInterceptor);
+    super.dispose();
+  }
+
+  bool myInterceptor(bool stopDefaultButtonEvent) {
+
+    Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId)));
+
+    return true;
+  }
 
   showAlertDialog(BuildContext context) {
 
@@ -207,6 +235,12 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       appBar: AppBar(
         title: Text('Shift Details'),
         actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId)));
+            },
+          ),
           //Add the dropdown widget to the `Action` part of our appBar. it can also be among the `leading` part
           dropdownWidget(),
         ],
@@ -267,6 +301,13 @@ class _ShiftDetailView extends State<ShiftDetailView> {
                       child: Text('${this.data.shiftEndTime}', textAlign: TextAlign.end, style: TextStyle(fontSize: 18)),
                     ),
                   ]),
+              Padding(padding: EdgeInsets.only(right: 25.0, top: 18),
+                child:              RaisedButton(
+                  onPressed: () => MapsLauncher.launchQuery(
+                      '${this.myClientAddy.address}, ${this.myClientAddy.city}, ${this.myClientAddy.state} ${this.myClientAddy.zip}, USA'),
+                  child: Text('${this.myClientAddy.address} ${this.myClientAddy.city} ${this.myClientAddy.state} ${this.myClientAddy.zip}', textAlign: TextAlign.center, style: TextStyle(color: Colors.black, fontSize: 16)),
+                ),
+              ),
               Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
@@ -294,9 +335,6 @@ class _ShiftDetailView extends State<ShiftDetailView> {
                 child: Text('${this.data.note}', textAlign: TextAlign.center, style: TextStyle(color: Colors.black, fontSize: 16)),
               ),
 
-              Padding(padding: EdgeInsets.only(right: 25.0, top: 18),
-                child: Text('${this.data.note}', textAlign: TextAlign.center, style: TextStyle(color: Colors.black, fontSize: 16)),
-              ),
            Expanded(
              child:
               Align(
@@ -310,6 +348,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       ),
     );
   }
+
 
   Future _postShiftInterest() async {
     try{
@@ -330,7 +369,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     String body = response.body;
 
     if(statusCode >= 200 && statusCode < 300){
-      Navigator.of(context).pop();
+      Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId)));
     }else{
       showConnectionDialog(context);
     }
@@ -365,7 +404,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
     if(statusCode >= 200 && statusCode < 300) {
       currentStatus = CHECKED_IN;
-      Navigator.of(context).pop();
+      Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId)));
     }else if(statusCode == 400){
       showInvalidGeoDialog(context);
     }else{
@@ -382,8 +421,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     setState(() {});
   }
 
-  Future
-  _makeSentHomeRequest() async {
+  Future _makeSentHomeRequest() async {
     try{
       // set up POST request arguments
       String url = AltoUtils.baseApiUrl + '/orderreturn';
@@ -401,7 +439,8 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
       if(statusCode >= 200 && statusCode < 300){
         currentStatus = CHECKED_OUT;
-        showSentHomeDialog(context);
+        Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId)));
+        UrlLauncher.launch('tel:+1 937 228 7007');
 
       }else{
         showConnectionDialog(context);
@@ -414,8 +453,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       print(error);
       showConnectionDialog(context);
     }
-    Navigator.of(context).pop();
-    UrlLauncher.launch('tel:+1 205 388 0478');
+
     currentStatus = CHECKED_OUT;
     myButton = getMyButton();
     setState(() {});
@@ -448,7 +486,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       if(currentStatus >= CHECKED_OUT){
         myButton = null;
       }
-      Navigator.of(context).pop();
+      Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId)));
     }else if(statusCode == 400){
       showInvalidGeoDialog(context);
     }else{
@@ -465,6 +503,30 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     setState(() {});
   }
 
+  Future _getClient() async {
+
+    String url = AltoUtils.baseApiUrl + '/client/'+this.data.clientId;
+    Map<String, String> headers = {"Content-type": "application/json"};
+
+    Response response = await get(url, headers: headers);
+    // check the status code for the result
+    int statusCode = response.statusCode;
+
+
+    if(statusCode >= 200 && statusCode < 300) {
+      String body = response.body;
+      final Map parsed = json.decode(body);
+      final clientAddy = ClientAddress.fromJson(parsed);
+
+      if(clientAddy.address != null){
+        setState(() {
+          this.myClientAddy = clientAddy;
+        });
+      }
+    }
+
+  }
+
   Future _makeGetRequest() async {
     // set up POST request arguments
     try{
@@ -472,7 +534,6 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     Map<String, String> headers = {"Content-type": "application/json"};
 
 
-    // make POST request
     Response response = await get(url, headers: headers);
     // check the status code for the result
     int statusCode = response.statusCode;
@@ -542,8 +603,8 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     try{
     // set up POST request arguments
     prefs = await SharedPreferences.getInstance();
-    String tempid = prefs.getString('temp_id') ?? '';
-    String url = AltoUtils.baseApiUrl + '/openshift/'+this.data.orderId+'/'+tempid;
+    gTempId = prefs.getString('temp_id') ?? '';
+    String url = AltoUtils.baseApiUrl + '/openshift/'+this.data.orderId+'/'+gTempId;
     Map<String, String> headers = {"Content-type": "application/json"};
 
 
@@ -620,6 +681,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
   }
 
   _getCurrentLocationInit() {
+    geolocator.checkGeolocationPermissionStatus()
     geolocator
         .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
         .then((Position position) {

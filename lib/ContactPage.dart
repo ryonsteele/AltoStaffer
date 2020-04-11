@@ -117,7 +117,7 @@ class AppState extends State<ContactPage> with SingleTickerProviderStateMixin{
 
 
   _textMe() async {
-    const uri = 'sms:2053880509';
+    const uri = 'sms:9372287007';
     if ( await UrlLauncher.canLaunch(uri)) {
       await UrlLauncher.launch(uri);
     } else {
@@ -126,7 +126,7 @@ class AppState extends State<ContactPage> with SingleTickerProviderStateMixin{
   }
 
   _callMe() async {
-    const uri = 'tel:+1 205 388 0509';
+    const uri = 'tel:+1 937 228 7007';
     if ( await UrlLauncher.canLaunch(uri)) {
       await UrlLauncher.launch(uri);
     } else {
@@ -143,11 +143,11 @@ class AppState extends State<ContactPage> with SingleTickerProviderStateMixin{
 //      intent.launch().catchError((e) {
 //        ;
 //      });
-      UrlLauncher.launch("mailto:smith@example.org").catchError((e){
+      UrlLauncher.launch("mailto:aharris@altostaffing.com").catchError((e){
         ;
       });
     } else if (Platform.isIOS) {
-      UrlLauncher.launch("mailto:smith@example.org").catchError((e){
+      UrlLauncher.launch("mailto:aharris@altostaffing.com").catchError((e){
         ;
       });
     }

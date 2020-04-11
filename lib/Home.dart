@@ -74,7 +74,8 @@ class _HomeState extends State<Home> {
   }
 
   Future navigateToLanding(context) async {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => LandPage()));
+    Navigator.of(context).push( MaterialPageRoute(builder: (context) => LandPage()));
+    //Navigator.push(context, MaterialPageRoute(builder: (context) => LandPage()));
   }
 
   @override
@@ -355,28 +356,11 @@ class _HomeState extends State<Home> {
                               child: Container(
                                 padding: EdgeInsets.only(bottom: 25, right: 40),
                                 child: Text(
-                                  "AP",
+                                  "APPLY",
                                   style: TextStyle(
                                     fontSize: 44,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
-                                  ),
-                                ),
-                                alignment: Alignment.center,
-                              ),
-                            ),
-                            Positioned(
-                              child: Align(
-                                child: Container(
-                                  padding: EdgeInsets.only(top: 40, left: 28),
-                                  width: 130,
-                                  child: Text(
-                                    "PLY",
-                                    style: TextStyle(
-                                      fontSize: 40,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white,
-                                    ),
                                   ),
                                 ),
                                 alignment: Alignment.center,
@@ -535,7 +519,17 @@ class _HomeState extends State<Home> {
     //todo externalize
     String url = AltoUtils.baseApiUrl + '/login';
     Map<String, String> headers = {"Content-type": "application/json"};
-    String myjson = '{"username": "'+ _email+'", "password": "'+_password+'", "devicetoken": "'+deviceToken+'", "devicetype": "'+platform+'" }';
+    StringBuffer buffer = new StringBuffer();
+    buffer.write('{"username": "');
+    buffer.write(_email);
+    buffer.write('", "password": "');
+    buffer.write(_password);
+    buffer.write('", "devicetoken": "');
+    buffer.write(deviceToken);
+    buffer.write('", "devicetype": "');
+    buffer.write(platform);
+    buffer.write('" }');
+    String myjson = buffer.toString();
     // make POST request
     Response response = await post(url, headers: headers, body: myjson);
     // check the status code for the result
@@ -559,7 +553,7 @@ class _HomeState extends State<Home> {
       try {
         final Map<String, dynamic> data = json.decode(body);
         String tempid = data['tempid'];
-        if (tempid == null || tempid.isEmpty){
+        if (tempid == null || tempid.isEmpty) {
           showConnectionDialog(context);
           return;
         }
@@ -572,8 +566,12 @@ class _HomeState extends State<Home> {
       } on NoSuchMethodError catch (e) {
         print('That string was null!');
       }
+    }else if(statusCode == 401) {
+      showInvalidPasswordDialog(context);
+
     }else{
       showConnectionDialog(context);
+
     }
 
     }on Exception catch (ex) {
@@ -647,6 +645,35 @@ class _HomeState extends State<Home> {
     AlertDialog alert = AlertDialog(
       title: Text('There\'s been a connection issue!'),
       content: Text("Please restart the app or try again soon"),
+      actions: [
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+
+  showInvalidPasswordDialog(BuildContext context) {
+
+
+    Widget continueButton = FlatButton(
+      child: Text("Ok"),
+      onPressed:  () {
+        Navigator.of(context, rootNavigator: true).pop('dialog');
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text('Invalid Password'),
+      content: Text("Please try again"),
       actions: [
         continueButton,
       ],
