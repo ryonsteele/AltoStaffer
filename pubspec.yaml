@@ -11,7 +11,7 @@ description: A new Flutter application.
 # In iOS, build-name is used as CFBundleShortVersionString while build-number used as CFBundleVersion.
 # Read more about iOS versioning at
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
-version: 1.8.0+8
+version: 1.9.0+9
 
 environment:
   sdk: ">=2.1.0 <3.0.0"
@@ -32,6 +32,9 @@ dependencies:
   custom_switch_button: ^0.5.0
   back_button_interceptor: ^4.2.3
   maps_launcher: ^1.2.0
+  device_calendar: ^3.1.0
+  file_picker: ^1.6.3+1
+  dio: ^3.0.9
 
 flutter_icons:
   android: "launcher_icon"

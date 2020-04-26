@@ -80,7 +80,7 @@ class _HomeState extends State<Home> {
 
   @override
   Widget build(BuildContext context) {
-    Color primary = Theme.of(context).primaryColor;
+    Color primary = Color(0xFF0B859E);
 
 
     //input widget
@@ -113,7 +113,7 @@ class _HomeState extends State<Home> {
               ),
               prefixIcon: Padding(
                 child: IconTheme(
-                  data: IconThemeData(color: Theme.of(context).primaryColor),
+                  data: IconThemeData(color: Color(0xFF0B859E)),
                   child: icon,
                 ),
                 padding: EdgeInsets.only(left: 30, right: 10),
@@ -237,7 +237,7 @@ class _HomeState extends State<Home> {
                                   child: Text(
                                     "LOGIN",
                                     style: TextStyle(
-                                      fontSize: 48,
+                                      fontSize: 40,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white,
                                     ),
@@ -354,11 +354,11 @@ class _HomeState extends State<Home> {
                             ),
                             Positioned(
                               child: Container(
-                                padding: EdgeInsets.only(bottom: 25, right: 40),
+                                padding: EdgeInsets.only(bottom: 25, right: 10),
                                 child: Text(
-                                  "APPLY",
+                                  " APPLY",
                                   style: TextStyle(
-                                    fontSize: 44,
+                                    fontSize: 40,
                                     fontWeight: FontWeight.bold,
                                     color: Colors.white,
                                   ),

@@ -22,6 +22,8 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCalendarsUsageDescription</key>
+    <string>INSERT_REASON_HERE</string>
 	<key>NSLocationAlwaysUsageDescription</key>
     <string>This app needs to able to send GPS location to the company owned API to evaluate if the person is at the designated location for starting designated, agreed upon shift i.a.w. state law and company policy and procedure.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>

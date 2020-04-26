@@ -136,18 +136,12 @@ class AppState extends State<ContactPage> with SingleTickerProviderStateMixin{
 
   _emailMe() async {
     if (Platform.isAndroid) {
-//      AndroidIntent intent = AndroidIntent(
-//        action: 'android.intent.action.MAIN',
-//        category: 'android.intent.category.APP_EMAIL',
-//      );
-//      intent.launch().catchError((e) {
-//        ;
-//      });
-      UrlLauncher.launch("mailto:aharris@altostaffing.com").catchError((e){
+
+      UrlLauncher.launch("mailto:scheduling@altostaffing.com").catchError((e){
         ;
       });
     } else if (Platform.isIOS) {
-      UrlLauncher.launch("mailto:aharris@altostaffing.com").catchError((e){
+      UrlLauncher.launch("mailto:scheduling@altostaffing.com").catchError((e){
         ;
       });
     }

@@ -4,7 +4,9 @@ import 'package:alto_staffing/AltoUtils.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
+import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'models/CalEvent.dart';
 import 'models/shifts.dart';
 import 'package:alto_staffing/Home.dart';
 import 'ShiftPrefPage.dart';
@@ -12,6 +14,7 @@ import 'dart:convert';
 import 'ShiftCard.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'ContactPage.dart';
+import 'package:device_calendar/device_calendar.dart';
 import 'models/Specs.dart';
 
 class LandPage extends StatefulWidget {
@@ -26,11 +29,16 @@ class LandPage extends StatefulWidget {
 class AppState extends State<LandPage> with TickerProviderStateMixin{
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   static String tempId = "";
+  String loadMessage = 'Loading....';
   static SharedPreferences prefs;
+  DeviceCalendarPlugin _deviceCalendarPlugin;
+  List<Calendar> _calendars;
+  Calendar _selectedCalendar;
   List shifts;
   List openShifts;
 
   AppState(String tid) {
+    _deviceCalendarPlugin = new DeviceCalendarPlugin();
     tempId = tid;
   }
 
@@ -40,10 +48,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
       this.shifts.clear();
       this.shifts = null;
     }
-    if(this.openShifts != null) {
-      this.openShifts.clear();
-      this.openShifts = null;
-    }
+    _retrieveCalendars();
     getScheduled();
     super.initState();
   }
@@ -118,7 +123,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
             if(index == 0){
               getScheduled();
 
-            }else if(index ==1 ){
+            }else if(index ==1 && (this.openShifts == null || this.openShifts.isEmpty )){
               getOpens();
             }
           },
@@ -137,8 +142,8 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
         Center(
         child: loadingListView(this.shifts),
         ),
-          Center(
-              child: loadingListView(this.openShifts),
+        Center(
+         child: loadingListView(this.openShifts),
           ),
           ],
         ),
@@ -147,6 +152,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
 
   Future getScheduled() async {
     if(this.shifts != null && this.shifts.isNotEmpty) return;
+    this.loadMessage = 'Loading....';
     this.shifts = new List<Shifts>();
     Response response;
     try {
@@ -164,7 +170,11 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
         this.shifts=(json.decode(response.body) as List).map((i) =>
             Shifts.fromJson(i)).toList();
       });
-
+      this.shifts.sort((a, b) => a.shiftStartTime.compareTo(b.shiftStartTime));
+      _addEventsToCalendar();
+      if (this.shifts == null || this.shifts.isEmpty){
+        setState(() {this.loadMessage = 'You have no shifts scheduled, please call Alto to schedule shifts.';});
+      }
 
     } on Exception catch (exception) {
       print(exception);
@@ -176,8 +186,8 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
   }
 
   Future getOpens() async {
-    if(this.openShifts != null && this.openShifts.isNotEmpty) return;
     this.openShifts = new List<Shifts>();
+    this.loadMessage = 'Loading....';
     Response openResponse;
     try {
       openResponse = await http.get(AltoUtils.baseApiUrl + '/mobileshifts/open/' + tempId);
@@ -191,6 +201,11 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
             Shifts.fromJson(i)).toList();
 
         this.openShifts.sort((a, b) => a.shiftStartTime.compareTo(b.shiftStartTime));
+
+        if (this.openShifts == null || this.openShifts.isEmpty){
+          setState(() {this.loadMessage = 'You have no shifts scheduled, please call Alto to schedule shifts.';});
+        }
+      setState(() {});
     } on Exception catch (exception) {
       print(exception);
       showConnectionDialog(context);
@@ -198,7 +213,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
       print(error);
       showConnectionDialog(context);
     }
-    setState(() {});
+
 
   }
 
@@ -216,7 +231,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
       return ListView.builder(
           itemCount: 1,
           itemBuilder: (context, index) {
-            return Text("Loading....");
+            return Text(this.loadMessage);
           });
 
     }
@@ -245,6 +260,76 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
         return alert;
       },
     );
+  }
+
+  void _retrieveCalendars() async {
+    //Retrieve user's calendars from mobile device
+    //Request permissions first if they haven't been granted
+    try {
+      var permissionsGranted = await _deviceCalendarPlugin.hasPermissions();
+      if (permissionsGranted.isSuccess && !permissionsGranted.data) {
+        permissionsGranted = await _deviceCalendarPlugin.requestPermissions();
+        if (!permissionsGranted.isSuccess || !permissionsGranted.data) {
+          return;
+        }
+      }
+
+      final calendarsResult = await _deviceCalendarPlugin.retrieveCalendars();
+      setState(() {
+        _calendars = calendarsResult?.data;
+        for(var cal in _calendars){
+          if (cal.isDefault){
+            _selectedCalendar = cal;
+          }
+        }
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future _addEventsToCalendar() async {
+    //Method to add events to the user's calendar
+    //If called, the list of mmaEvents will be iterated through and the mma
+    // Events will be added to the user's selected calendar
+
+    //If the events have previously been added by the user, they will have a
+    // shared preference key for the Event ID and the event will be UPDATED
+    // instead of CREATED
+
+    //If events are successfully created/added, then the events that were
+    // CREATED/UPDATED will be displayed to the user in the status string
+
+    var evString = new StringBuffer('');
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    for (var shift in this.shifts) {
+      CalEvent evnt = new CalEvent(shift.clientName);
+      evnt.readyForCalendar = true;
+      evnt.eventDate = new DateFormat("MM/dd/yyyy HH:mm a").parse(shift.shiftStartTime);
+      evnt.addDetails(shift.clientName + shift.shiftStartTime);
+      //Before adding MMA Event to calendar, check if it is ready for calendar
+      // (i.e. ensure it is properly formatted)
+      if (evnt.readyForCalendar) {
+        final eventTime = evnt.eventDate;
+        final eventToCreate = new Event(_selectedCalendar.id);
+        eventToCreate.title = evnt.eventName;
+        eventToCreate.start = eventTime;
+        eventToCreate.description = evnt.toString();
+        String mmaEventId = prefs.getString(evnt.getPrefKey());
+        if (mmaEventId != null) {
+          eventToCreate.eventId = mmaEventId;
+        }
+        eventToCreate.end = eventTime.add(new Duration(hours: 3));
+        final createEventResult =
+        await _deviceCalendarPlugin.createOrUpdateEvent(eventToCreate);
+        if (createEventResult.isSuccess &&
+            (createEventResult.data?.isNotEmpty ?? false)) {
+          prefs.setString(evnt.getPrefKey(), createEventResult.data);
+          evString.write(evnt.eventName + '\n');
+        }
+      }
+    }
   }
 
 }

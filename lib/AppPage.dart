@@ -1,12 +1,16 @@
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:dio/dio.dart' as dio;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
-import 'package:alto_staffing/MultiSelectDialogItem.dart';
 import 'AltoUtils.dart';
 import 'Home.dart';
 import 'MultiSelectChip.dart';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/services.dart';
+
 
 class AppPage extends StatefulWidget {
   @override
@@ -33,9 +37,17 @@ class AppState extends State<AppPage> {
   String zip;
   String primaryPhone;
   String secondaryPhone;
+  static String fileKey;
   List specDatasource;
   List<String> multiSelectSpec = List();
   List<String> multiSelectCerts = List();
+
+  String _fileName;
+  List<File> files = [];
+  Map<String, String> _paths;
+  String _extension;
+  bool _loadingPath = false;
+  FileType _pickingType;
 
 
   bool _obsecure = false;
@@ -296,6 +308,13 @@ class AppState extends State<AppPage> {
                     child: _button("Certification", Colors.white, primary,
                         primary, Colors.white, _showMultiSelectCerts),
                   ),
+//                  Padding(
+//                    padding: const EdgeInsets.only(top: 20.0, bottom: 20.0),
+//                    child: new RaisedButton(
+//                    onPressed: () => _openFileExplorer(),
+//                      child: new Text("Attach Resume"),
+//                      ),
+//                  ),
                   SizedBox(
                     height: 20,
                   ),
@@ -321,18 +340,42 @@ class AppState extends State<AppPage> {
         );
   }
 
+  Upload() async {
+
+    if(fileKey == null || fileKey.isEmpty) return;
+    var dioDoo = dio.Dio();
+    dioDoo.options.baseUrl = AltoUtils.baseApiUrl;
+
+    for(File f in this.files) {
+
+      dio.FormData formData =  dio.FormData.fromMap({
+        "file": [
+          dio.MultipartFile.fromBytes(f.readAsBytesSync(),
+              filename: "file"),
+        ],
+        "filekey": fileKey
+      });
+
+      var response = await dioDoo.post("/fileupload", data: formData).catchError((e) {
+        print("Got error: ${e.error}");     // Finally, callback fires.
+      });
+      print(response.statusCode);
+    }
+  }
+
 
   Future _makePostRequest() async {
 
     try{
       // set up POST request arguments
+      fileKey = UniqueKey().toString();
       String url = AltoUtils.baseApiUrl + '/apply';
       Map<String, String> headers = {"Content-type": "application/json"};
 
       String json = '{"firstname": "'+ this.fname.trim()+'", "email": "'+Home.myUserName.trim()+'",' +'"lastname": "'+ this.lname.trim()+
           '",' +'"street": "'+ this.street.trim()+'",' +'"city": "'+ this.city.trim()+ '",' +'"state": "'+ this.state.trim()+
           '", "zip": "'+ zip.trim() + '", "certs": '+ jsonEncode(this.multiSelectCerts) +', "specs": '+ jsonEncode(this.multiSelectSpec)
-          +', "primary": "'+ this.primaryPhone.trim()+'", "secondary": "'+ this.secondaryPhone.trim()+'"}';
+          +', "primary": "'+ this.primaryPhone.trim()+'", "secondary": "'+ this.secondaryPhone.trim()+'", "filekey": "'+ fileKey.trim()+'"}';
 
       // make POST request
        print(json);
@@ -355,17 +398,19 @@ class AppState extends State<AppPage> {
         sPhoneController.clear();
         multiSelectCerts.clear();
         multiSelectSpec.clear();
+        //Upload();
+        showSuccessDialog(this.context);
 
       }else{
-        showConnectionDialog(context);
+        showConnectionDialog(this.context);
       }
 
     } on Exception catch (exception) {
       print(exception);
-      showConnectionDialog(context);
+      showConnectionDialog(this.context);
     } catch (error) {
       print(error);
-      showConnectionDialog(context);
+      showConnectionDialog(this.context);
     }
     setState(() {});
   }
@@ -404,6 +449,7 @@ class AppState extends State<AppPage> {
       child: Text("Ok"),
       onPressed:  () {
         Navigator.of(context, rootNavigator: true).pop('dialog');
+        Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => Home()));
       },
     );
 
@@ -423,6 +469,25 @@ class AppState extends State<AppPage> {
         return alert;
       },
     );
+  }
+
+  void _openFileExplorer() async {
+    setState(() => _loadingPath = true);
+    File file = null;
+
+    try {
+
+      file  = await FilePicker.getFile(type: FileType.any);
+      files.add(file);
+
+    } on PlatformException catch (e) {
+      print("Unsupported operation" + e.toString());
+    }
+    if (!mounted) return;
+    setState(()  {
+      _loadingPath = false;
+
+    });
   }
 
 

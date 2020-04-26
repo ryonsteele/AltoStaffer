@@ -38,6 +38,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
   TextEditingController _titleFieldController = TextEditingController();
   final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
   Position _currentPosition;
+  String _currentAddy;
   static const int OPEN_SHIFT = 0;
   static const int CHECKED_IN = 1;
   static const int CLOCKIN_WINDOW = 10;
@@ -301,6 +302,16 @@ class _ShiftDetailView extends State<ShiftDetailView> {
                       child: Text('${this.data.shiftEndTime}', textAlign: TextAlign.end, style: TextStyle(fontSize: 18)),
                     ),
                   ]),
+              Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Padding(padding: EdgeInsets.only(left: 25.0, top: 8),
+                      child: Text('Floor: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
+                    ),
+                    Padding(padding: EdgeInsets.only(right: 25.0, top: 8),
+                      child: Text('${this.data.floor}', textAlign: TextAlign.end, style: TextStyle(fontSize: 18)),
+                    ),
+                  ]),
               Padding(padding: EdgeInsets.only(right: 25.0, top: 18),
                 child:              RaisedButton(
                   onPressed: () => MapsLauncher.launchQuery(
@@ -459,7 +470,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     setState(() {});
   }
 
-  Future _makePatchRequest(String currentAddy, double lat, double lon) async {
+  Future _makePatchRequest(String currentAddy, double lat, double lon, bool tookBreak) async {
     try{
     // set up POST request arguments
     String url = AltoUtils.baseApiUrl + '/shift';
@@ -469,7 +480,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
     String json = '{"tempId": "'+ this.data.tempId+'", "username": "'+Home.myUserName+'",' +'"clockedAddy": "'+ currentAddy+
         '",' +'"lat": "'+ lat.toString()+'",' +'"lon": "'+ lon.toString()+ '",' +'"shiftstatuskey": "'+ currentStatus.toString()+
-        '", "shiftSignoff": "'+ signOff + '", "orderId": "'+ this.data.orderId+'", "clientId": "'+ this.data.clientId+'"}';
+        '", "shiftSignoff": "'+ signOff + '", "orderId": "'+ this.data.orderId+'", "breaks": "'+ tookBreak.toString() +'", "clientId": "'+ this.data.clientId+'"}';
 
     print(json);
     print(url);
@@ -661,7 +672,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       return;
     }
     if(stat == OPEN_SHIFT){
-      statusText = 'OPEN';
+      statusText = 'COMMITTED';
       statusColor = Colors.blue;
       sliderColor = Colors.blue;
     }else {
@@ -681,7 +692,6 @@ class _ShiftDetailView extends State<ShiftDetailView> {
   }
 
   _getCurrentLocationInit() {
-    geolocator.checkGeolocationPermissionStatus()
     geolocator
         .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
         .then((Position position) {
@@ -696,19 +706,17 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
       var coordinates = new Coordinates(_currentPosition.latitude, _currentPosition.longitude);
       var addresses = await Geocoder.local.findAddressesFromCoordinates(coordinates);
-      var first = addresses.first;
-      print("${first.featureName} : ${first.addressLine}");
+      _currentAddy = addresses.first.addressLine;
 
 
       List<Placemark> p = await geolocator.placemarkFromCoordinates(
           _currentPosition.latitude, _currentPosition.longitude);
 
       if(currentStatus == OPEN_SHIFT) {
-        _makePostRequest(first.addressLine, _currentPosition.latitude,
+        _makePostRequest(_currentAddy, _currentPosition.latitude,
             _currentPosition.longitude);
       }else{
-        _makePatchRequest(first.addressLine, _currentPosition.latitude,
-            _currentPosition.longitude);
+        showBreakDialog(context);
       }
     } catch (e) {
       print(e);
@@ -736,6 +744,45 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     AlertDialog alert = AlertDialog(
       title: Text('You are being sent home by client?'),
       content: Text("Please click confirm to send alert to Alto"),
+      actions: [
+        continueButton,
+        cancelButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  showBreakDialog(BuildContext context) {
+
+    Widget continueButton = FlatButton(
+      child: Text("Yes"),
+      onPressed:  () {
+        Navigator.of(context, rootNavigator: true).pop('dialog');
+        _makePatchRequest(_currentAddy, _currentPosition.latitude,
+            _currentPosition.longitude, true);
+      },
+    );
+
+    Widget cancelButton = FlatButton(
+      child: Text("No"),
+      onPressed:  () {
+        Navigator.of(context, rootNavigator: true).pop('dialog');
+        _makePatchRequest(_currentAddy, _currentPosition.latitude,
+            _currentPosition.longitude, false);
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text('Did you take a break?'),
+      content: Text("Please click yes if you took a break duriong this shift"),
       actions: [
         continueButton,
         cancelButton,
