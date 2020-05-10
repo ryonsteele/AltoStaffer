@@ -41,7 +41,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
   String _currentAddy;
   static const int OPEN_SHIFT = 0;
   static const int CHECKED_IN = 1;
-  static const int CLOCKIN_WINDOW = 10;
+  static const int CLOCKIN_WINDOW = 99999910; //10m after or 30m after
   //static const int CHECKED_OUT_BRK = 2;
   //static const int CHECKED_IN_BRK = 3;
   static const int CHECKED_OUT = 4;
@@ -49,7 +49,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
   static Color sliderColor = Colors.blue;
   static String statusText = "";
   static MaterialColor statusColor = Colors.lightBlue;
-  static String sliderStatus = "Slide to Change Status...";
+  static String sliderStatus = "Slide to Clock In/out";
   SlidingButton myButton;
   ClientAddress myClientAddy = new ClientAddress("","","","","","","");
 
@@ -68,6 +68,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
 
     if(this.data.status == 'Open') {
+      sliderStatus = "Slide to Confirm Interest in Shift";
       sliderColor = Colors.orangeAccent;
       statusText = 'OPEN';
       statusColor = Colors.orange;
@@ -185,10 +186,6 @@ class _ShiftDetailView extends State<ShiftDetailView> {
         });
         },);
   }
-
-
-
-
 
 
   @override
@@ -401,6 +398,11 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     Map<String, String> headers = {"Content-type": "application/json"};
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
+
+//    //debug
+      lat = 39.861742;
+      lon = -84.290875;
+
     String json = '{"tempId": "'+ this.data.tempId+'", "username": "'+Home.myUserName+'",' +'"clockedAddy": "'+ currentAddy+
         '",' +'"lat": "'+ lat.toString()+'",' +'"lon": "'+ lon.toString()+ '",' +'"shiftstatuskey": "'+ currentStatus.toString()+
         '", "shiftSignoff": "'+ signOff + '", "orderId": "'+ this.data.orderId+'", "clientId": "'+ this.data.clientId+'"}';
@@ -475,6 +477,10 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     // set up POST request arguments
     String url = AltoUtils.baseApiUrl + '/shift';
     Map<String, String> headers = {"Content-type": "application/json"};
+
+//    //debug
+    lat = 39.861742;
+    lon = -84.290875;
 
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 

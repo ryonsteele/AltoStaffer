@@ -32,7 +32,7 @@ class MyApp extends StatelessWidget {
           primaryColor: Color(0xFF0B859E),
           fontFamily: "Montserrat",
           canvasColor: Colors.transparent),
-      home: Home(),
+      home: Home(bypassSplash: true,),
     );
   }
 }

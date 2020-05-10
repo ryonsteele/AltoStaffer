@@ -14,11 +14,20 @@ import 'LandPage.dart';
 class Home extends StatefulWidget {
   static String myUserName = "";
   static SessionKey keyNumber;
+  bool bypassSplash = false;
+
+  Home({Key key, @required this.bypassSplash}) : super(key: key);
   @override
-  _HomeState createState() => _HomeState();
+  _HomeState createState() => _HomeState(this.bypassSplash);
+
 }
 
 class _HomeState extends State<Home> {
+
+  bool bypassSplash = false;
+  _HomeState(bool bypassSplash) {
+    this.bypassSplash = bypassSplash;
+  }
 
   final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
   //FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
@@ -35,38 +44,37 @@ class _HomeState extends State<Home> {
   String _email;
   String _password;
   static String deviceToken = "";
+  static int fcmTokenCount = 0;
   String _displayName;
   bool _obsecure = false;
 
   @override
   void initState() {
     super.initState();
+    fcmTokenCount = 0;
+
+
+  firebaseMessaging.configure(
+    onLaunch: (Map<String, dynamic> msg) {
+      print(" onLaunch called ${(msg)}");
+    },
+    onResume: (Map<String, dynamic> msg) {
+      print(" onResume called ${(msg)}");
+    },
+    onMessage: (Map<String, dynamic> msg) {
+      //showNotification(msg);
+      print(" onMessage called ${(msg)}");
+    },
+  );
+  firebaseMessaging.requestNotificationPermissions(
+      const IosNotificationSettings(sound: true, alert: true, badge: true));
+  firebaseMessaging.onIosSettingsRegistered.listen((
+      IosNotificationSettings setting) {
+    print('IOS Setting Registed');
+  });
+    getToken();
+
     loadPrefs();
-   // getSessionKey();
-
-
-
-    firebaseMessaging.configure(
-      onLaunch: (Map<String, dynamic> msg) {
-        print(" onLaunch called ${(msg)}");
-      },
-      onResume: (Map<String, dynamic> msg) {
-        print(" onResume called ${(msg)}");
-      },
-      onMessage: (Map<String, dynamic> msg) {
-        //showNotification(msg);
-        print(" onMessage called ${(msg)}");
-      },
-    );
-    firebaseMessaging.requestNotificationPermissions(const IosNotificationSettings(sound: true, alert: true, badge: true));
-    firebaseMessaging.onIosSettingsRegistered.listen((IosNotificationSettings setting) {
-      print('IOS Setting Registed');
-    });
-    firebaseMessaging.getToken().then((token) {
-      //update(token);
-      deviceToken = token;
-      print(token);
-    });
   }
 
   Future navigateToApplication(context) async {
@@ -477,6 +485,19 @@ class _HomeState extends State<Home> {
         ));
   }
 
+  void getToken(){
+    firebaseMessaging.getToken().then((token) {
+      //update(token);
+      deviceToken = token;
+      print(token);
+      if((deviceToken == null || deviceToken.isEmpty) && fcmTokenCount < 3){
+        fcmTokenCount++;
+        getToken();
+      }
+      fcmTokenCount = 0;
+    });
+  }
+
   Future getSessionKey() async {
     List keys = new List<SessionKey>();
     Response response;
@@ -489,12 +510,10 @@ class _HomeState extends State<Home> {
       print(error);
     }
 
-
     if(response.body.contains('html')) return null;
     //print(response.body);
 
-    keys=(json.decode(response.body) as List).map((i) =>
-        SessionKey.fromJson(i)).toList();
+    keys=(json.decode(response.body) as List).map((i) => SessionKey.fromJson(i)).toList();
 
     //todo utils
     for(SessionKey rec in keys ){
@@ -516,7 +535,6 @@ class _HomeState extends State<Home> {
       throw new UnsupportedError("Unknown device type");
     }
     // set up POST request arguments
-    //todo externalize
     String url = AltoUtils.baseApiUrl + '/login';
     Map<String, String> headers = {"Content-type": "application/json"};
     StringBuffer buffer = new StringBuffer();
@@ -583,11 +601,17 @@ class _HomeState extends State<Home> {
   Future loadPrefs() async{
      prefs = await SharedPreferences.getInstance();
      _emailController.text = prefs.getString('first_key') ?? '';
+     _email = prefs.getString('first_key') ?? '';
      _passwordController.text = prefs.getString('second_key') ?? '';
+     _password = prefs.getString('second_key') ?? '';
      firstLogin =  prefs.getBool('init_key') ?? true;
      this.rememberMe =  prefs.getBool('remember_key') ?? false;
 
-     setState(() {});
+     Home.myUserName = _email;
+     if(!firstLogin && bypassSplash && this.rememberMe){
+       _makePostRequest();
+     }
+
   }
 
 
@@ -613,8 +637,9 @@ class _HomeState extends State<Home> {
     AlertDialog alert = AlertDialog(
       title: Text('First time? Confirm Password!'),
       content: TextField(
+        obscureText: true,
         controller: _textFieldController,
-        decoration: InputDecoration(hintText: "Enter password again..."),
+        decoration: InputDecoration( hintText: "Enter password again..."),
       ),
       actions: [
         cancelButton,

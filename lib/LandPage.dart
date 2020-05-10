@@ -7,6 +7,7 @@ import 'package:http/http.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/CalEvent.dart';
+import 'models/Historicals.dart';
 import 'models/shifts.dart';
 import 'package:alto_staffing/Home.dart';
 import 'ShiftPrefPage.dart';
@@ -36,6 +37,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
   Calendar _selectedCalendar;
   List shifts;
   List openShifts;
+  Historicals historicals;
 
   AppState(String tid) {
     _deviceCalendarPlugin = new DeviceCalendarPlugin();
@@ -49,7 +51,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
       this.shifts = null;
     }
     _retrieveCalendars();
-    getScheduled();
+    getScheduled(false);
     super.initState();
   }
 
@@ -92,7 +94,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
 
               }else if(_currentlySelected.trim() == "Logout"){
                 Navigator.pushReplacement(context, MaterialPageRoute(
-                    builder: (context) => Home()));
+                    builder: (context) => Home(bypassSplash: false,)));
               }
             }
           });
@@ -108,7 +110,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         home: DefaultTabController(
-        length: 2,
+        length: 3,
         child: Scaffold(
         resizeToAvoidBottomPadding: false,
         key: _scaffoldKey,
@@ -118,21 +120,22 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
               dropdownWidget(),
             ],
             backgroundColor: Color(0xFF0B859E),
-        bottom: TabBar(
+          bottom: TabBar(
           onTap: (index) {
             if(index == 0){
-              getScheduled();
-
-            }else if(index ==1 && (this.openShifts == null || this.openShifts.isEmpty )){
-              getOpens();
+              getScheduled(false);
+            }else if(index ==1){
+              getOpens(false);
+            }else if(index ==2){
+              getHistorical();
             }
           },
           tabs: [
             Tab(icon: Icon(Icons.calendar_today)),
             Tab(icon: Icon(Icons.local_offer)),
+            Tab(icon: Icon(Icons.hourglass_full)),
           ],
         ),
-        title: Text('My Shifts'),
       ),
         backgroundColor: Colors.white,
         body:
@@ -140,18 +143,21 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
           physics: NeverScrollableScrollPhysics(),
           children: [
         Center(
-        child: loadingListView(this.shifts),
+        child: loadingScheduledListView(this.shifts),
         ),
         Center(
-         child: loadingListView(this.openShifts),
+         child: loadingOpensListView(this.openShifts),
           ),
-          ],
+        Center(
+          child: loadingHistoryView(this.historicals),
+          ),
+         ],
         ),
         )));
   }
 
-  Future getScheduled() async {
-    if(this.shifts != null && this.shifts.isNotEmpty) return;
+  Future<void> getScheduled(bool clear) async {
+    if(clear && this.shifts != null && this.shifts.isNotEmpty) this.shifts.clear();
     this.loadMessage = 'Loading....';
     this.shifts = new List<Shifts>();
     Response response;
@@ -170,7 +176,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
         this.shifts=(json.decode(response.body) as List).map((i) =>
             Shifts.fromJson(i)).toList();
       });
-      this.shifts.sort((a, b) => a.shiftStartTime.compareTo(b.shiftStartTime));
+     // this.shifts.sort((a, b) => a.shiftStartTime.compareTo(b.shiftStartTime));
       _addEventsToCalendar();
       if (this.shifts == null || this.shifts.isEmpty){
         setState(() {this.loadMessage = 'You have no shifts scheduled, please call Alto to schedule shifts.';});
@@ -185,7 +191,40 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
     }
   }
 
-  Future getOpens() async {
+  Future getHistorical() async {
+    this.loadMessage = 'Loading....';
+    this.shifts = new List<Shifts>();
+    Response response;
+    try {
+      if(tempId == null || tempId.isEmpty){
+        prefs = await SharedPreferences.getInstance();
+        tempId = prefs.getString('temp_id') ?? '';
+      }
+
+      response = await http.get(AltoUtils.baseApiUrl + '/mobileshifts/history/' + tempId);
+
+
+      if(response.body.contains('html')) return null;
+      //print(response.body);
+      setState(() {
+        this.historicals=Historicals.fromJson(json.decode(response.body));
+      });
+
+//      if (this.shifts == null || this.shifts.isEmpty){
+//        setState(() {this.loadMessage = 'No data available at this time.';});
+//      }
+
+    } on Exception catch (exception) {
+      print(exception);
+      showConnectionDialog(context);
+    } catch (error) {
+      print(error);
+      showConnectionDialog(context);
+    }
+  }
+
+  Future getOpens(bool clear) async {
+    if(clear && this.openShifts != null && this.openShifts.isNotEmpty) this.openShifts.clear();
     this.openShifts = new List<Shifts>();
     this.loadMessage = 'Loading....';
     Response openResponse;
@@ -200,7 +239,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
         this.openShifts=(json.decode(openResponse.body) as List).map((i) =>
             Shifts.fromJson(i)).toList();
 
-        this.openShifts.sort((a, b) => a.shiftStartTime.compareTo(b.shiftStartTime));
+       // this.openShifts.sort((a, b) => a.shiftStartTime.compareTo(b.shiftStartTime));
 
         if (this.openShifts == null || this.openShifts.isEmpty){
           setState(() {this.loadMessage = 'You have no shifts scheduled, please call Alto to schedule shifts.';});
@@ -213,18 +252,116 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
       print(error);
       showConnectionDialog(context);
     }
-
-
   }
 
-  loadingListView(List items) {
+
+
+  loadingScheduledListView(List items) {
     if(items != null && items.isNotEmpty){
 
-      return ListView.builder(
+      return items.length != 0
+          ? RefreshIndicator( child: ListView.builder(
           itemCount: items != null ? items.length : 0,
           itemBuilder: (context, index) {
             return ShiftCard(items[index]);
+          },),
+           onRefresh: getSchedData,
+          )
+
+
+        : Center(child: CircularProgressIndicator());
+    }else{
+
+      return ListView.builder(
+          itemCount: 1,
+          itemBuilder: (context, index) {
+            return Text(this.loadMessage);
           });
+
+    }
+  }
+
+  Future<void> getOpenData() async{
+    this.openShifts.clear();
+    setState(() {
+      getOpens(false);
+    });
+  }
+
+  Future<void> getSchedData() async{
+    this.shifts.clear();
+    setState(() {
+      getScheduled(false);
+    });
+  }
+
+  loadingOpensListView(List items) {
+    if(items != null && items.isNotEmpty){
+
+      return items.length != 0
+          ? RefreshIndicator( child: ListView.builder(
+        itemCount: items != null ? items.length : 0,
+        itemBuilder: (context, index) {
+          return ShiftCard(items[index]);
+        },),
+        onRefresh: getOpenData,
+      )
+
+
+          : Center(child: CircularProgressIndicator());
+    }else{
+
+      return ListView.builder(
+          itemCount: 1,
+          itemBuilder: (context, index) {
+            return Text(this.loadMessage);
+          });
+
+    }
+  }
+
+  loadingHistoryView(Historicals item) {
+    if(item != null){
+
+      return Container(
+        width: double.infinity,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.max,
+          children: <Widget>[
+            Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Padding(padding: EdgeInsets.only(left: 25.0, bottom: 100, top: 15),
+                    child: Text('Period of: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 12)),
+                  ),
+                  Padding(padding: EdgeInsets.only(right: 25.0, bottom: 100, top: 15),
+                    child: Text('${this.historicals.dateWindowBegin} to ${this.historicals.dateWindowEnd}', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 12)),
+                  ),
+                ]),
+            Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Padding(padding: EdgeInsets.only(left: 25.0, bottom: 50),
+                    child: Text('Hours Scheduled: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
+                  ),
+                  Padding(padding: EdgeInsets.only(right: 25.0, bottom: 50),
+                    child: Text('${this.historicals.hoursScheduled}', textAlign: TextAlign.end, style: TextStyle(fontSize: 18)),
+                  ),
+                ]),
+            Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
+                  Padding(padding: EdgeInsets.only(left: 25.0),
+                    child: Text('Hours Worked: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
+                  ),
+                  Padding(padding: EdgeInsets.only(right: 25.0),
+                    child: Text('${this.historicals.hoursWorked}', textAlign: TextAlign.end, style: TextStyle(fontSize: 18)),
+                  ),
+                ]),
+          ],
+        ),
+      );
 
     }else{
 

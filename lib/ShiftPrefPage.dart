@@ -1,9 +1,13 @@
+import 'dart:convert';
+
 import 'package:alto_staffing/AltoUtils.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart';
 import 'package:alto_staffing/Home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:custom_switch_button/custom_switch_button.dart';
+
+import 'MultiSelectChip.dart';
 
 
 class ShiftPrefPage extends StatefulWidget {
@@ -27,6 +31,7 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
   bool sat = false;
   String tempid;
   static SharedPreferences prefs;
+  List<String> multiSelectCerts = List();
 
 
   AppState(String tid) {
@@ -237,6 +242,11 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
                   ),
                 ],
               ),
+              Padding(
+                padding: EdgeInsets.only(bottom: 20, left: 20, right: 20),
+                child: _button("Certification", Colors.white, primary,
+                    primary, Colors.white, _showMultiSelectCerts),
+              ),
               SizedBox(height: 20),
               MaterialButton(
                 padding: EdgeInsets.all(8.0),
@@ -267,15 +277,38 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
     );
   }
 
+  //button widget
+  Widget _button(String text, Color splashColor, Color highlightColor,
+      Color fillColor, Color textColor, void function()) {
+    return RaisedButton(
+      highlightElevation: 0.0,
+      splashColor: splashColor,
+      highlightColor: highlightColor,
+      elevation: 0.0,
+      color: fillColor,
+      shape: RoundedRectangleBorder(
+          borderRadius: new BorderRadius.circular(30.0)),
+      child: Text(
+        text,
+        style: TextStyle(
+            fontWeight: FontWeight.bold, color: textColor, fontSize: 20),
+      ),
+      onPressed: () {
+        function();
+      },
+    );
+  }
+
   Future storePrefrences() async {
     try{
       // set up POST request arguments
       String url = AltoUtils.baseApiUrl + '/userprefs';
       Map<String, String> headers = {"Content-type": "application/json"};
 
+
       String json = '{"tempId": "'+ this.tempid +'", "username": "'+Home.myUserName+'",' +'"mon": "'+ this.mon.toString() +
           '",' +'"tue": "'+ this.tues.toString()+'",' +'"wed": "'+ this.wed.toString()+ '",' +'"thur": "'+ this.thur.toString() +
-          '", "fri": "'+ this.fri.toString() + '", "sat": "'+ this.sat.toString() +'", "sun": "'+ this.sun.toString() + '"}';
+          '", "fri": "'+ this.fri.toString() + '", "sat": "'+ this.sat.toString() +'", "sun": "'+ this.sun.toString() +  '", "certs": '+ jsonEncode(this.multiSelectCerts) +'}';
 
       // make POST request
       // print(json);
@@ -294,6 +327,7 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
         prefs.setBool('fri', this.fri);
         prefs.setBool('sat', this.sat);
         prefs.setBool('sun', this.sun);
+        prefs.setStringList("certs", this.multiSelectCerts);
 
         Navigator.of(context).pop();
       }else{
@@ -322,11 +356,40 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
       this.fri =  prefs.getBool('fri') ?? false;
       this.sat =  prefs.getBool('sat') ?? false;
       this.sun =  prefs.getBool('sun') ?? false;
+      this.multiSelectCerts = prefs.getStringList("certs");
     });
   }
 
 
+  Future<Widget> _showMultiSelectCerts()  async {
 
+    final certlist = AltoUtils.getCerts();
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          //Here we will build the content of the dialog
+          return AlertDialog(
+            title: Text("Scroll & Select All Certifications"),
+            content:SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[ MultiSelectChip(
+                  certlist,
+                  onSelectionChanged: (selectedList) {
+                    setState(() {
+                      multiSelectCerts = selectedList;
+                    });
+                  },
+                ),],),),
+            actions: <Widget>[
+              FlatButton(
+                child: Text("Select"),
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            ],
+          );
+        });
+  }
 
 
   showConnectionDialog(BuildContext context) {

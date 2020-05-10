@@ -156,35 +156,35 @@ class AppState extends State<AppPage> {
       );
     }
 
-    Future<Widget> _showMultiSelectSpec()  async {
-
-      final speclist = AltoUtils.getSpecs();
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            //Here we will build the content of the dialog
-            return AlertDialog(
-              title: Text("Scroll & Select All Specializations"),
-            content:SingleChildScrollView(
-            child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: <Widget>[ MultiSelectChip(
-                speclist,
-                onSelectionChanged: (selectedList) {
-                  setState(() {
-                    multiSelectSpec = selectedList;
-                  });
-                },
-               ),],),),
-              actions: <Widget>[
-                FlatButton(
-                  child: Text("Select"),
-                  onPressed: () => Navigator.of(context).pop(),
-                )
-              ],
-            );
-          });
-    }
+//    Future<Widget> _showMultiSelectSpec()  async {
+//
+//      final speclist = AltoUtils.getSpecs();
+//      showDialog(
+//          context: context,
+//          builder: (BuildContext context) {
+//            //Here we will build the content of the dialog
+//            return AlertDialog(
+//              title: Text("Scroll & Select All Specializations"),
+//            content:SingleChildScrollView(
+//            child: Column(
+//            crossAxisAlignment: CrossAxisAlignment.stretch,
+//            children: <Widget>[ MultiSelectChip(
+//                speclist,
+//                onSelectionChanged: (selectedList) {
+//                  setState(() {
+//                    multiSelectSpec = selectedList;
+//                  });
+//                },
+//               ),],),),
+//              actions: <Widget>[
+//                FlatButton(
+//                  child: Text("Select"),
+//                  onPressed: () => Navigator.of(context).pop(),
+//                )
+//              ],
+//            );
+//          });
+//    }
 
     Future<Widget> _showMultiSelectCerts()  async {
 
@@ -298,11 +298,11 @@ class AppState extends State<AppPage> {
                     child: _inputBlank( "Secondary Phone #",
                         sPhoneController, false),
                   ),
-                  Padding(
-                    padding: EdgeInsets.only(bottom: 20, left: 20, right: 20),
-                    child: _button("Specialization", Colors.white, primary,
-                        primary, Colors.white, _showMultiSelectSpec),
-                  ),
+//                  Padding(
+//                    padding: EdgeInsets.only(bottom: 20, left: 20, right: 20),
+//                    child: _button("Specialization", Colors.white, primary,
+//                        primary, Colors.white, _showMultiSelectSpec),
+//                  ),
                   Padding(
                     padding: EdgeInsets.only(bottom: 20, left: 20, right: 20),
                     child: _button("Certification", Colors.white, primary,

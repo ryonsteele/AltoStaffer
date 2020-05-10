@@ -13,7 +13,10 @@
     <application
         android:name="io.flutter.app.FlutterApplication"
         android:label="Alto Healthcare Staffing"
-        android:icon="@mipmap/launcher_icon">
+        android:icon="@mipmap/launcher_icon"
+        android:allowBackup="false"
+        android:fullBackupContent="false">
+
         <activity
             android:name=".MainActivity"
             android:launchMode="singleTop"
