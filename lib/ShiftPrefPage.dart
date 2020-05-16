@@ -22,16 +22,17 @@ class ShiftPrefPage extends StatefulWidget {
 class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
-  bool sun = false;
-  bool mon = false;
-  bool tues = false;
-  bool wed = false;
-  bool thur = false;
-  bool fri = false;
-  bool sat = false;
+  bool sun = true;
+  bool mon = true;
+  bool tues = true;
+  bool wed = true;
+  bool thur = true;
+  bool fri = true;
+  bool sat = true;
   String tempid;
   static SharedPreferences prefs;
   List<String> multiSelectCerts = List();
+  List<String> multiSelectRegions = List();
 
 
   AppState(String tid) {
@@ -46,11 +47,12 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
 
   @override
   Widget build(BuildContext context) {
-    Color primary = Theme.of(context).primaryColor;
+    Color primary = Color(0xFF0B859E);;
 
     return Scaffold(
       appBar: AppBar(
         title: Text('Filter Offerings'),
+        backgroundColor: Color(0xFF0B859E),
       ),
       backgroundColor: Colors.white,
       body: Container(
@@ -86,7 +88,7 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
                   ),
                 ],
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 15),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
@@ -112,7 +114,7 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
                   ),
                 ],
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 15),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
@@ -138,7 +140,7 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
                   ),
                 ],
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 15),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
@@ -164,7 +166,7 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
                   ),
                 ],
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 15),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
@@ -190,7 +192,7 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
                   ),
                 ],
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 15),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
@@ -216,7 +218,7 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
                   ),
                 ],
               ),
-              SizedBox(height: 20),
+              SizedBox(height: 15),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
@@ -243,9 +245,14 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
                 ],
               ),
               Padding(
-                padding: EdgeInsets.only(bottom: 20, left: 20, right: 20),
+                padding: EdgeInsets.only(bottom: 15, left: 20, right: 20),
                 child: _button("Certification", Colors.white, primary,
                     primary, Colors.white, _showMultiSelectCerts),
+              ),
+              Padding(
+                padding: EdgeInsets.only(bottom: 15, left: 20, right: 20),
+                child: _button("Regions", Colors.white, primary,
+                    primary, Colors.white, _showMultiSelectRegions),
               ),
               SizedBox(height: 20),
               MaterialButton(
@@ -308,7 +315,8 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
 
       String json = '{"tempId": "'+ this.tempid +'", "username": "'+Home.myUserName+'",' +'"mon": "'+ this.mon.toString() +
           '",' +'"tue": "'+ this.tues.toString()+'",' +'"wed": "'+ this.wed.toString()+ '",' +'"thur": "'+ this.thur.toString() +
-          '", "fri": "'+ this.fri.toString() + '", "sat": "'+ this.sat.toString() +'", "sun": "'+ this.sun.toString() +  '", "certs": '+ jsonEncode(this.multiSelectCerts) +'}';
+          '", "fri": "'+ this.fri.toString() + '", "sat": "'+ this.sat.toString() +'", "sun": "'+ this.sun.toString() +
+          '", "certs": '+ jsonEncode(this.multiSelectCerts) + ', "regions": '+ jsonEncode(this.multiSelectRegions) +'}';
 
       // make POST request
       // print(json);
@@ -328,6 +336,7 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
         prefs.setBool('sat', this.sat);
         prefs.setBool('sun', this.sun);
         prefs.setStringList("certs", this.multiSelectCerts);
+        prefs.setStringList("regions", this.multiSelectRegions);
 
         Navigator.of(context).pop();
       }else{
@@ -349,14 +358,15 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
 
 
     setState(() {
-      this.mon =  prefs.getBool('mon') ?? false;
-      this.tues =  prefs.getBool('tue') ?? false;
-      this.wed =  prefs.getBool('wed') ?? false;
-      this.thur =  prefs.getBool('thur') ?? false;
-      this.fri =  prefs.getBool('fri') ?? false;
-      this.sat =  prefs.getBool('sat') ?? false;
-      this.sun =  prefs.getBool('sun') ?? false;
+      this.mon =  prefs.getBool('mon') ?? true;
+      this.tues =  prefs.getBool('tue') ?? true;
+      this.wed =  prefs.getBool('wed') ?? true;
+      this.thur =  prefs.getBool('thur') ?? true;
+      this.fri =  prefs.getBool('fri') ?? true;
+      this.sat =  prefs.getBool('sat') ?? true;
+      this.sun =  prefs.getBool('sun') ?? true;
       this.multiSelectCerts = prefs.getStringList("certs");
+      this.multiSelectRegions = prefs.getStringList("regions");
     });
   }
 
@@ -378,6 +388,36 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
                   onSelectionChanged: (selectedList) {
                     setState(() {
                       multiSelectCerts = selectedList;
+                    });
+                  },
+                ),],),),
+            actions: <Widget>[
+              FlatButton(
+                child: Text("Select"),
+                onPressed: () => Navigator.of(context).pop(),
+              )
+            ],
+          );
+        });
+  }
+
+  Future<Widget> _showMultiSelectRegions()  async {
+
+    final reglist = AltoUtils.getRegions();
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          //Here we will build the content of the dialog
+          return AlertDialog(
+            title: Text("Select All Interested Regions"),
+            content:SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[ MultiSelectChip(
+                  reglist,
+                  onSelectionChanged: (selectedList) {
+                    setState(() {
+                      multiSelectRegions = selectedList;
                     });
                   },
                 ),],),),

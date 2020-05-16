@@ -54,7 +54,7 @@ class AppState extends State<AppPage> {
 
   @override
   Widget build(BuildContext context) {
-    Color primary = Theme.of(context).primaryColor;
+    Color primary = Color(0xFF0B859E);
     void initState() {
       super.initState();
     }
@@ -78,14 +78,14 @@ class AppState extends State<AppPage> {
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(30),
                 borderSide: BorderSide(
-                  color: Theme.of(context).primaryColor,
+                  color: Color(0xFF0B859E),
                   width: 2,
                 ),
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(30),
                 borderSide: BorderSide(
-                  color: Theme.of(context).primaryColor,
+                  color: Color(0xFF0B859E),
                   width: 3,
                 ),
               ),
@@ -117,14 +117,14 @@ class AppState extends State<AppPage> {
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(30),
                 borderSide: BorderSide(
-                  color: Theme.of(context).primaryColor,
+                  color: Color(0xFF0B859E),
                   width: 2,
                 ),
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(30),
                 borderSide: BorderSide(
-                  color: Theme.of(context).primaryColor,
+                  color: Color(0xFF0B859E),
                   width: 3,
                 ),
               ),

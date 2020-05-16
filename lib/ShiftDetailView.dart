@@ -41,7 +41,8 @@ class _ShiftDetailView extends State<ShiftDetailView> {
   String _currentAddy;
   static const int OPEN_SHIFT = 0;
   static const int CHECKED_IN = 1;
-  static const int CLOCKIN_WINDOW = 99999910; //10m after or 30m after
+  static const int CLOCKIN_WINDOW_BEGIN = -10; //10m befor or 30m after
+  static const int CLOCKIN_WINDOW_END = 30; //10m before or 30m after
   //static const int CHECKED_OUT_BRK = 2;
   //static const int CHECKED_IN_BRK = 3;
   static const int CHECKED_OUT = 4;
@@ -54,6 +55,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
   ClientAddress myClientAddy = new ClientAddress("","","","","","","");
 
   static int currentStatus = 0;
+  static int backTrigger = 0;
 
   List<String> litems;
   Shifts data;
@@ -65,9 +67,10 @@ class _ShiftDetailView extends State<ShiftDetailView> {
   }
 
   Future loadInit() async {
-
+    backTrigger = 0;
 
     if(this.data.status == 'Open') {
+      backTrigger = 1;
       sliderStatus = "Slide to Confirm Interest in Shift";
       sliderColor = Colors.orangeAccent;
       statusText = 'OPEN';
@@ -97,7 +100,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
   bool myInterceptor(bool stopDefaultButtonEvent) {
 
-    Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId)));
+    Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId, backTrigger: backTrigger)));
 
     return true;
   }
@@ -196,7 +199,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     }
 
     final List<String> _dropdownValues = [
-      "  ",
+      "Settings",
       "Sent Home"
     ]; //The list of values we want on the dropdown
     String _currentlySelected = ""; //var to hold currently selected value
@@ -205,6 +208,9 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     Widget dropdownWidget() {
       return DropdownButton(
         //map each value from the lIst to our dropdownMenuItem widget
+        icon: Icon(Icons.arrow_drop_down),
+        iconSize: 42,
+        underline: SizedBox(),
         items: _dropdownValues
             .map((value) => DropdownMenuItem(
           child: Text(value),
@@ -215,7 +221,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
           //once dropdown changes, update the state of out currentValue
           setState(() {
             _currentlySelected = value;
-            if(!_currentlySelected.trim().isEmpty){
+            if(_currentlySelected.trim() != 'Settings'){
               showSentHomeDialog(context);
             }
           });
@@ -236,7 +242,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
           IconButton(
             icon: Icon(Icons.arrow_back),
             onPressed: () {
-              Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId)));
+              Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId, backTrigger: backTrigger,)));
             },
           ),
           //Add the dropdown widget to the `Action` part of our appBar. it can also be among the `leading` part
@@ -377,7 +383,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     String body = response.body;
 
     if(statusCode >= 200 && statusCode < 300){
-      Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId)));
+      showInterestSuccessDialog(context);
     }else{
       showConnectionDialog(context);
     }
@@ -400,8 +406,8 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
 
 //    //debug
-      lat = 39.861742;
-      lon = -84.290875;
+//      lat = 39.861742;
+//      lon = -84.290875;
 
     String json = '{"tempId": "'+ this.data.tempId+'", "username": "'+Home.myUserName+'",' +'"clockedAddy": "'+ currentAddy+
         '",' +'"lat": "'+ lat.toString()+'",' +'"lon": "'+ lon.toString()+ '",' +'"shiftstatuskey": "'+ currentStatus.toString()+
@@ -417,7 +423,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
     if(statusCode >= 200 && statusCode < 300) {
       currentStatus = CHECKED_IN;
-      Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId)));
+      Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId, backTrigger: backTrigger,)));
     }else if(statusCode == 400){
       showInvalidGeoDialog(context);
     }else{
@@ -452,7 +458,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
 
       if(statusCode >= 200 && statusCode < 300){
         currentStatus = CHECKED_OUT;
-        Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId)));
+        Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId, backTrigger: backTrigger,)));
         UrlLauncher.launch('tel:+1 937 228 7007');
 
       }else{
@@ -479,8 +485,8 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     Map<String, String> headers = {"Content-type": "application/json"};
 
 //    //debug
-    lat = 39.861742;
-    lon = -84.290875;
+//    lat = 39.861742;
+//    lon = -84.290875;
 
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
@@ -503,7 +509,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       if(currentStatus >= CHECKED_OUT){
         myButton = null;
       }
-      Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId)));
+      Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId, backTrigger: backTrigger,)));
     }else if(statusCode == 400){
       showInvalidGeoDialog(context);
     }else{
@@ -565,11 +571,17 @@ class _ShiftDetailView extends State<ShiftDetailView> {
           currentStatus = 0;
           statusText = 'OPEN';
           _setStatusText(currentStatus);
+
+         // * var berlinWallFell = new DateTime.utc(1989, DateTime.november, 9);
+         // * var dDay = new DateTime.utc(1944, DateTime.june, 6);
+         // *
+         // * Duration difference = berlinWallFell.difference(dDay);
+         // * assert(difference.inDays == 16592);
           var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
           var date2 = DateTime.now();
-          var difference = date2.difference(newDateTimeObj2).inMinutes;
+          var difference = newDateTimeObj2.difference(date2).inMinutes;
           // currently set to allow clockin two hours after shift start
-          if( difference.abs() <= CLOCKIN_WINDOW) {
+          if( difference >= CLOCKIN_WINDOW_BEGIN && difference <= CLOCKIN_WINDOW_END) {
             myButton = getMyButton();
           }
         });
@@ -831,6 +843,36 @@ class _ShiftDetailView extends State<ShiftDetailView> {
         },
       );
     }
+
+
+  showInterestSuccessDialog(BuildContext context) {
+
+
+    Widget continueButton = FlatButton(
+      child: Text("Ok"),
+      onPressed:  () {
+        Navigator.of(context, rootNavigator: true).pop('dialog');
+        Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId, backTrigger: backTrigger,)));
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text('Interest Submitted'),
+      content: Text("Someone from Alto should reach out soon!"),
+      actions: [
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
 
   showInvalidGeoDialog(BuildContext context) {
 

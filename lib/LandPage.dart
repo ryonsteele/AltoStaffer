@@ -1,6 +1,7 @@
 
 
 import 'package:alto_staffing/AltoUtils.dart';
+import 'package:alto_staffing/AuthService.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
@@ -20,16 +21,18 @@ import 'models/Specs.dart';
 
 class LandPage extends StatefulWidget {
   final String tempid;
+  int backTrigger;
 
-  LandPage({Key key, @required this.tempid}) : super(key: key);
+  LandPage({Key key, @required this.tempid, this.backTrigger}) : super(key: key);
 
   @override
-  AppState createState() => AppState(this.tempid);
+  AppState createState() => AppState(this.tempid, this.backTrigger);
 }
 
-class AppState extends State<LandPage> with TickerProviderStateMixin{
+class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBindingObserver{
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   static String tempId = "";
+  static int backTrigger = 0;
   String loadMessage = 'Loading....';
   static SharedPreferences prefs;
   DeviceCalendarPlugin _deviceCalendarPlugin;
@@ -39,20 +42,41 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
   List openShifts;
   Historicals historicals;
 
-  AppState(String tid) {
+  AppState(String tid, int backtrigger) {
     _deviceCalendarPlugin = new DeviceCalendarPlugin();
     tempId = tid;
+    backTrigger = backtrigger;
   }
 
   @override
   void initState() {
+    WidgetsBinding.instance.addObserver(this);
     if(this.shifts != null) {
       this.shifts.clear();
       this.shifts = null;
     }
     _retrieveCalendars();
-    getScheduled(false);
+    if(backTrigger == 0) {
+      getScheduled(false);
+    }else{
+      getOpens(false);
+    }
     super.initState();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(final AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      setState(() {
+        _makePostTokenRequest();
+      });
+    }
   }
 
   @override
@@ -61,17 +85,20 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
 
 
     final List<String> _dropdownValues = [
-      "  ",
+      "Settings",
       "Contact Alto",
       "Shift Preferences",
       "Logout",
     ]; //The list of values we want on the dropdown
-    String _currentlySelected = ""; //var to hold currently selected value
+    String _currentlySelected = "Settings"; //var to hold currently selected value
 
     //make the drop down its own widget for readability
     Widget dropdownWidget() {
       return DropdownButton(
         //map each value from the lIst to our dropdownMenuItem widget
+        icon: Icon(Icons.arrow_drop_down),
+        iconSize: 42,
+        underline: SizedBox(),
         items: _dropdownValues
             .map((value) => DropdownMenuItem(
           child: Text(value),
@@ -82,7 +109,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
           //once dropdown changes, update the state of out currentValue
           setState(() {
             _currentlySelected = value;
-            if(!_currentlySelected.trim().isEmpty){
+            if(_currentlySelected.trim() != 'Settings'){
 
               if(_currentlySelected.trim() == "Contact Alto"){
                 Navigator.push(context, MaterialPageRoute(
@@ -110,8 +137,9 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         home: DefaultTabController(
-        length: 3,
-        child: Scaffold(
+          initialIndex: backTrigger,
+         length: 3,
+         child: Scaffold(
         resizeToAvoidBottomPadding: false,
         key: _scaffoldKey,
           appBar: AppBar(
@@ -210,9 +238,6 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
         this.historicals=Historicals.fromJson(json.decode(response.body));
       });
 
-//      if (this.shifts == null || this.shifts.isEmpty){
-//        setState(() {this.loadMessage = 'No data available at this time.';});
-//      }
 
     } on Exception catch (exception) {
       print(exception);
@@ -329,34 +354,41 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
           mainAxisAlignment: MainAxisAlignment.start,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
-            Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Padding(padding: EdgeInsets.only(left: 25.0, bottom: 100, top: 15),
-                    child: Text('Period of: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 12)),
-                  ),
-                  Padding(padding: EdgeInsets.only(right: 25.0, bottom: 100, top: 15),
-                    child: Text('${this.historicals.dateWindowBegin} to ${this.historicals.dateWindowEnd}', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 12)),
-                  ),
-                ]),
+            Padding(padding: EdgeInsets.only(left: 0.0, bottom: 5, top: 15),
+              child: Text('Hours Worked Period ', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 16)),
+
+            ),
+            Padding(padding: EdgeInsets.only(right: 0.0, bottom: 100, top: 5),
+              child: Text('${this.historicals.dateWindowBegin} to ${this.historicals.dateWindowEnd}', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 12)),
+            ),
+//            Row(
+//                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                children: <Widget>[
+//                  Padding(padding: EdgeInsets.only(left: 25.0, bottom: 100, top: 15),
+//                    child: Text('Hours Worked Period: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 12)),
+//                  ),
+//                  Padding(padding: EdgeInsets.only(right: 25.0, bottom: 100, top: 15),
+//                    child: Text('${this.historicals.dateWindowBegin} to ${this.historicals.dateWindowEnd}', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 12)),
+//                  ),
+//                ]),
             Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   Padding(padding: EdgeInsets.only(left: 25.0, bottom: 50),
-                    child: Text('Hours Scheduled: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
+                    child: Text('All Future Hours Scheduled: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 16)),
                   ),
                   Padding(padding: EdgeInsets.only(right: 25.0, bottom: 50),
-                    child: Text('${this.historicals.hoursScheduled}', textAlign: TextAlign.end, style: TextStyle(fontSize: 18)),
+                    child: Text('${this.historicals.hoursScheduled}', textAlign: TextAlign.end, style: TextStyle(fontSize: 16)),
                   ),
                 ]),
             Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: <Widget>[
                   Padding(padding: EdgeInsets.only(left: 25.0),
-                    child: Text('Hours Worked: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
+                    child: Text('Total Hours Worked in Pay Period: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 16)),
                   ),
                   Padding(padding: EdgeInsets.only(right: 25.0),
-                    child: Text('${this.historicals.hoursWorked}', textAlign: TextAlign.end, style: TextStyle(fontSize: 18)),
+                    child: Text('${this.historicals.hoursWorked}', textAlign: TextAlign.end, style: TextStyle(fontSize: 16)),
                   ),
                 ]),
           ],
@@ -466,6 +498,33 @@ class AppState extends State<LandPage> with TickerProviderStateMixin{
           evString.write(evnt.eventName + '\n');
         }
       }
+    }
+  }
+
+  Future _makePostTokenRequest() async {
+    try{
+      // set up POST request arguments
+      String url = AltoUtils.baseApiUrl + '/token';
+      Map<String, String> headers = {"Content-type": "application/json"};
+      AuthService auth = new AuthService();
+      String token = auth.getToken();
+
+
+      String json = '{"username": "'+ Home.myUserName+'", "devicetoken": "'+token+'"}';
+
+      // make POST request
+      // print(json);
+      Response response = await post(url, headers: headers, body: json);
+      // check the status code for the result
+      int statusCode = response.statusCode;
+      // this API passes back the id of the new item added to the body
+      String body = response.body;
+
+
+    } on Exception catch (exception) {
+      print(exception);
+    } catch (error) {
+      print(error);
     }
   }
 

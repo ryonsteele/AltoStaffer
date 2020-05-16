@@ -1,4 +1,5 @@
 import 'package:alto_staffing/AltoUtils.dart';
+import 'package:alto_staffing/AuthService.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -29,7 +30,7 @@ class _HomeState extends State<Home> {
     this.bypassSplash = bypassSplash;
   }
 
-  final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
+  //final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
   //FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
 
 
@@ -44,35 +45,37 @@ class _HomeState extends State<Home> {
   String _email;
   String _password;
   static String deviceToken = "";
-  static int fcmTokenCount = 0;
+ // static int fcmTokenCount = 0;
   String _displayName;
   bool _obsecure = false;
+  AuthService auth = new AuthService();
 
   @override
   void initState() {
     super.initState();
-    fcmTokenCount = 0;
+//    fcmTokenCount = 0;
+    deviceToken = auth.init();
 
-
-  firebaseMessaging.configure(
-    onLaunch: (Map<String, dynamic> msg) {
-      print(" onLaunch called ${(msg)}");
-    },
-    onResume: (Map<String, dynamic> msg) {
-      print(" onResume called ${(msg)}");
-    },
-    onMessage: (Map<String, dynamic> msg) {
-      //showNotification(msg);
-      print(" onMessage called ${(msg)}");
-    },
-  );
-  firebaseMessaging.requestNotificationPermissions(
-      const IosNotificationSettings(sound: true, alert: true, badge: true));
-  firebaseMessaging.onIosSettingsRegistered.listen((
-      IosNotificationSettings setting) {
-    print('IOS Setting Registed');
-  });
-    getToken();
+//
+//  firebaseMessaging.configure(
+//    onLaunch: (Map<String, dynamic> msg) {
+//      print(" onLaunch called ${(msg)}");
+//    },
+//    onResume: (Map<String, dynamic> msg) {
+//      print(" onResume called ${(msg)}");
+//    },
+//    onMessage: (Map<String, dynamic> msg) {
+//      //showNotification(msg);
+//      print(" onMessage called ${(msg)}");
+//    },
+//  );
+//  firebaseMessaging.requestNotificationPermissions(
+//      const IosNotificationSettings(sound: true, alert: true, badge: true));
+//  firebaseMessaging.onIosSettingsRegistered.listen((
+//      IosNotificationSettings setting) {
+//    print('IOS Setting Registed');
+//  });
+//    getToken();
 
     loadPrefs();
   }
@@ -108,14 +111,14 @@ class _HomeState extends State<Home> {
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(30),
                 borderSide: BorderSide(
-                  color: Theme.of(context).primaryColor,
+                  color: Color(0xFF0B859E),
                   width: 2,
                 ),
               ),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(30),
                 borderSide: BorderSide(
-                  color: Theme.of(context).primaryColor,
+                  color: Color(0xFF0B859E),
                   width: 3,
                 ),
               ),
@@ -211,7 +214,7 @@ class _HomeState extends State<Home> {
                             icon: Icon(
                               Icons.close,
                               size: 30.0,
-                              color: Theme.of(context).primaryColor,
+                              color: Color(0xFF0B859E),
                             ),
                           ),
                         )
@@ -235,7 +238,7 @@ class _HomeState extends State<Home> {
                                     height: 130,
                                     decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: Theme.of(context).primaryColor),
+                                        color: Color(0xFF0B859E)),
                                   ),
                                   alignment: Alignment.center,
                                 ),
@@ -281,13 +284,23 @@ class _HomeState extends State<Home> {
                             width: MediaQuery.of(context).size.width,
                           ),
                         ),
-                      Switch(value: this.rememberMe,
-                       onChanged: (value) {
-                        setState(() {
-                          this.rememberMe = value;
-                          prefs.setBool('remember_key', value);
-                         });
-                      },),
+                        Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: <Widget>[
+                              Padding(padding: EdgeInsets.only(left: 50.0, top: 8),
+                                child: Text('Remember Me: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
+                              ),
+                              Padding(padding: EdgeInsets.only(right: 50.0, top: 8),
+                                child:                       Switch(value: this.rememberMe,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      this.rememberMe = value;
+                                      prefs.setBool('remember_key', value);
+                                    });
+                                  },),
+                              ),
+                            ]),
+
                         SizedBox(
                           height: 20,
                         ),
@@ -332,7 +345,7 @@ class _HomeState extends State<Home> {
                             icon: Icon(
                               Icons.close,
                               size: 30.0,
-                              color: Theme.of(context).primaryColor,
+                              color: Color(0xFF0B859E),
                             ),
                           ),
                         )
@@ -355,7 +368,7 @@ class _HomeState extends State<Home> {
                                   height: 130,
                                   decoration: BoxDecoration(
                                       shape: BoxShape.circle,
-                                      color: Theme.of(context).primaryColor),
+                                      color: Color(0xFF0B859E)),
                                 ),
                                 alignment: Alignment.center,
                               ),
@@ -420,7 +433,7 @@ class _HomeState extends State<Home> {
         appBar: AppBar(
           title: Text('Alto Staffing'),
         ),
-        backgroundColor: Theme.of(context).primaryColor,
+        backgroundColor: Color(0xFF0B859E),
         body: Column(
           children: <Widget>[
            // logo(),
@@ -448,8 +461,8 @@ class _HomeState extends State<Home> {
                   borderSide: BorderSide(color: Colors.white, width: 2.0),
                   highlightElevation: 0.0,
                   splashColor: Colors.white,
-                  highlightColor: Theme.of(context).primaryColor,
-                  color: Theme.of(context).primaryColor,
+                  highlightColor: Color(0xFF0B859E),
+                  color: Color(0xFF0B859E),
                   shape: RoundedRectangleBorder(
                     borderRadius: new BorderRadius.circular(30.0),
                   ),
@@ -485,18 +498,17 @@ class _HomeState extends State<Home> {
         ));
   }
 
-  void getToken(){
-    firebaseMessaging.getToken().then((token) {
-      //update(token);
-      deviceToken = token;
-      print(token);
-      if((deviceToken == null || deviceToken.isEmpty) && fcmTokenCount < 3){
-        fcmTokenCount++;
-        getToken();
-      }
-      fcmTokenCount = 0;
-    });
-  }
+//  void getToken(){
+//    firebaseMessaging.getToken().then((token) {
+//      //update(token);
+//      deviceToken = token;
+//      if((deviceToken == null || deviceToken.isEmpty) && fcmTokenCount < 3){
+//        fcmTokenCount++;
+//        getToken();
+//      }
+//      fcmTokenCount = 0;
+//    });
+//  }
 
   Future getSessionKey() async {
     List keys = new List<SessionKey>();
@@ -544,6 +556,8 @@ class _HomeState extends State<Home> {
     buffer.write(_password);
     buffer.write('", "devicetoken": "');
     buffer.write(deviceToken);
+    buffer.write('", "firstTime": "');
+    buffer.write(firstLogin);
     buffer.write('", "devicetype": "');
     buffer.write(platform);
     buffer.write('" }');
@@ -578,7 +592,7 @@ class _HomeState extends State<Home> {
         //print(tempid); //debug
         prefs.setString('temp_id', tempid);
         Navigator.push(context, MaterialPageRoute(
-            builder: (context) => LandPage(tempid: tempid)));
+            builder: (context) => LandPage(tempid: tempid, backTrigger: 0)));
       } on FormatException catch (e) {
         print("That string didn't look like Json.");
       } on NoSuchMethodError catch (e) {
