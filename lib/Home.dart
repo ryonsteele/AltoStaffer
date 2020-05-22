@@ -30,9 +30,6 @@ class _HomeState extends State<Home> {
     this.bypassSplash = bypassSplash;
   }
 
-  //final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
-  //FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = new FlutterLocalNotificationsPlugin();
-
 
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   TextEditingController _emailController = new TextEditingController();
@@ -45,7 +42,6 @@ class _HomeState extends State<Home> {
   String _email;
   String _password;
   static String deviceToken = "";
- // static int fcmTokenCount = 0;
   String _displayName;
   bool _obsecure = false;
   AuthService auth = new AuthService();
@@ -53,29 +49,8 @@ class _HomeState extends State<Home> {
   @override
   void initState() {
     super.initState();
-//    fcmTokenCount = 0;
     deviceToken = auth.init();
-
-//
-//  firebaseMessaging.configure(
-//    onLaunch: (Map<String, dynamic> msg) {
-//      print(" onLaunch called ${(msg)}");
-//    },
-//    onResume: (Map<String, dynamic> msg) {
-//      print(" onResume called ${(msg)}");
-//    },
-//    onMessage: (Map<String, dynamic> msg) {
-//      //showNotification(msg);
-//      print(" onMessage called ${(msg)}");
-//    },
-//  );
-//  firebaseMessaging.requestNotificationPermissions(
-//      const IosNotificationSettings(sound: true, alert: true, badge: true));
-//  firebaseMessaging.onIosSettingsRegistered.listen((
-//      IosNotificationSettings setting) {
-//    print('IOS Setting Registed');
-//  });
-//    getToken();
+    auth.main();
 
     loadPrefs();
   }

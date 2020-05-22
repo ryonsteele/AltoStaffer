@@ -18,6 +18,7 @@ import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'ContactPage.dart';
 import 'package:device_calendar/device_calendar.dart';
 import 'models/Specs.dart';
+import 'package:charts_flutter/flutter.dart' as charts;
 
 class LandPage extends StatefulWidget {
   final String tempid;
@@ -82,8 +83,6 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
   @override
   Widget build(BuildContext context) {
 
-
-
     final List<String> _dropdownValues = [
       "Settings",
       "Contact Alto",
@@ -133,7 +132,6 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
       );
     }
 
-
     return MaterialApp(
         debugShowCheckedModeBanner: false,
         home: DefaultTabController(
@@ -165,7 +163,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
           ],
         ),
       ),
-        backgroundColor: Colors.white,
+        backgroundColor: Color(0xFFDAE0E0),
         body:
         TabBarView(
           physics: NeverScrollableScrollPhysics(),
@@ -345,55 +343,125 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
     }
   }
 
+  /// Create series list with one series
+  static List<charts.Series<HoursData, String>> _createSampleData(Historicals item) {
+    final data = [
+      new HoursData("ALL Hours Scheduled: ", double.parse(item.hoursScheduled)),
+      new HoursData("Period Hours Worked: ", double.parse(item.hoursWorked)),
+    ];
+
+    return [
+      new charts.Series<HoursData, String>(
+        id: 'Hours',
+        domainFn: (HoursData hours, _) => hours.label,
+        measureFn: (HoursData hours, _) => hours.value,
+        data: data,
+      )
+    ];
+  }
+
   loadingHistoryView(Historicals item) {
     if(item != null){
+      double c_width = MediaQuery.of(context).size.width*0.9;
+      double c_height = MediaQuery.of(context).size.height*0.65;
+      List<charts.Series> seriesList = _createSampleData(item);
+
 
       return Container(
-        width: double.infinity,
+        color: Color(0xFFDAE0E0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.start,
           mainAxisSize: MainAxisSize.max,
           children: <Widget>[
-            Padding(padding: EdgeInsets.only(left: 0.0, bottom: 5, top: 15),
-              child: Text('Hours Worked Period ', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 16)),
 
+          Padding(padding: EdgeInsets.only(left: 0.0, bottom: 5, top: 15),
+              child: Text('Hours Worked Period ', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 16)),
             ),
-            Padding(padding: EdgeInsets.only(right: 0.0, bottom: 100, top: 5),
+          Container(
+         width: c_width,
+          child: Padding(padding: EdgeInsets.only(right: 0.0, bottom: 10, top: 5),
               child: Text('${this.historicals.dateWindowBegin} to ${this.historicals.dateWindowEnd}', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 12)),
             ),
-//            Row(
+          ),
+            Padding(padding: EdgeInsets.only(right: 5, left: 5, top: 10),
+              child: SizedBox(
+               height: c_height,
+               width: c_width,
+               child: new charts.PieChart(
+                seriesList,
+
+            behaviors: [
+            new charts.DatumLegend(
+              // Positions for "start" and "end" will be left and right respectively
+              // for widgets with a build context that has directionality ltr.
+              // For rtl, "start" and "end" will be right and left respectively.
+              // Since this example has directionality of ltr, the legend is
+              // positioned on the right side of the chart.
+              position: charts.BehaviorPosition.inside,
+              // By default, if the position of the chart is on the left or right of
+              // the chart, [horizontalFirst] is set to false. This means that the
+              // legend entries will grow as new rows first instead of a new column.
+              horizontalFirst: false,
+              // This defines the padding around each legend entry.
+              cellPadding: new EdgeInsets.only(right: 4.0, bottom: 4.0),
+              // Set [showMeasures] to true to display measures in series legend.
+              showMeasures: true,
+              // Configure the measure value to be shown by default in the legend.
+              legendDefaultMeasure: charts.LegendDefaultMeasure.firstValue,
+              // Optionally provide a measure formatter to format the measure value.
+              // If none is specified the value is formatted as a decimal.
+            ),
+          ],
+        ),),),
+    ],), );
+
+//      return Container(
+//        color: Color(0xFFDAE0E0),
+//        width: c_width,
+//        child: Column(
+//          mainAxisAlignment: MainAxisAlignment.start,
+//          mainAxisSize: MainAxisSize.max,
+//          children: <Widget>[
+//
+//            Padding(padding: EdgeInsets.only(left: 0.0, bottom: 5, top: 15),
+//              child: Text('Hours Worked Period ', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 16)),
+//
+//            ),
+//        Container(
+//         width: c_width,
+//          child: Padding(padding: EdgeInsets.only(right: 0.0, bottom: 100, top: 5),
+//              child: Text('${this.historicals.dateWindowBegin} to ${this.historicals.dateWindowEnd}', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 12)),
+//            ),
+//          ),
+//          Container(
+//            width: c_width,
+//            child: Row(
 //                mainAxisAlignment: MainAxisAlignment.spaceBetween,
 //                children: <Widget>[
-//                  Padding(padding: EdgeInsets.only(left: 25.0, bottom: 100, top: 15),
-//                    child: Text('Hours Worked Period: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 12)),
+//                  Padding(padding: EdgeInsets.only(left: 25.0, bottom: 50),
+//                    child: Text('All Future Hours Scheduled: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 16)),
 //                  ),
-//                  Padding(padding: EdgeInsets.only(right: 25.0, bottom: 100, top: 15),
-//                    child: Text('${this.historicals.dateWindowBegin} to ${this.historicals.dateWindowEnd}', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 12)),
+//                  Padding(padding: EdgeInsets.only(right: 25.0, bottom: 50),
+//                    child: Text('${this.historicals.hoursScheduled}', textAlign: TextAlign.end, style: TextStyle(fontSize: 16)),
 //                  ),
 //                ]),
-            Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Padding(padding: EdgeInsets.only(left: 25.0, bottom: 50),
-                    child: Text('All Future Hours Scheduled: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 16)),
-                  ),
-                  Padding(padding: EdgeInsets.only(right: 25.0, bottom: 50),
-                    child: Text('${this.historicals.hoursScheduled}', textAlign: TextAlign.end, style: TextStyle(fontSize: 16)),
-                  ),
-                ]),
-            Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  Padding(padding: EdgeInsets.only(left: 25.0),
-                    child: Text('Total Hours Worked in Pay Period: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 16)),
-                  ),
-                  Padding(padding: EdgeInsets.only(right: 25.0),
-                    child: Text('${this.historicals.hoursWorked}', textAlign: TextAlign.end, style: TextStyle(fontSize: 16)),
-                  ),
-                ]),
-          ],
-        ),
-      );
+//            ),
+//          Container(
+//            width: c_width,
+//            child: Row(
+//                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+//                children: <Widget>[
+//                  Padding(padding: EdgeInsets.only(left: 25.0),
+//                    child: Text('Total Hours Worked in Pay Period: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 16)),
+//                  ),
+//                  Padding(padding: EdgeInsets.only(right: 25.0),
+//                    child: Text('${this.historicals.hoursWorked}', textAlign: TextAlign.end, style: TextStyle(fontSize: 16)),
+//                  ),
+//                ]),
+//          ),
+//          ],
+//        ),
+//      );
 
     }else{
 
@@ -477,6 +545,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
       evnt.readyForCalendar = true;
       evnt.eventDate = new DateFormat("MM/dd/yyyy HH:mm a").parse(shift.shiftStartTime);
       evnt.addDetails(shift.clientName + shift.shiftStartTime);
+
       //Before adding MMA Event to calendar, check if it is ready for calendar
       // (i.e. ensure it is properly formatted)
       if (evnt.readyForCalendar) {
@@ -484,12 +553,12 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
         final eventToCreate = new Event(_selectedCalendar.id);
         eventToCreate.title = evnt.eventName;
         eventToCreate.start = eventTime;
+        eventToCreate.end = new DateFormat("MM/dd/yyyy HH:mm a").parse(shift.shiftEndTime);
         eventToCreate.description = evnt.toString();
         String mmaEventId = prefs.getString(evnt.getPrefKey());
         if (mmaEventId != null) {
           eventToCreate.eventId = mmaEventId;
         }
-        eventToCreate.end = eventTime.add(new Duration(hours: 3));
         final createEventResult =
         await _deviceCalendarPlugin.createOrUpdateEvent(eventToCreate);
         if (createEventResult.isSuccess &&
@@ -528,4 +597,11 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
     }
   }
 
+}
+
+class HoursData {
+  final String label;
+  final double value;
+
+  HoursData(this.label, this.value);
 }

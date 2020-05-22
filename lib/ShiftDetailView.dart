@@ -41,8 +41,8 @@ class _ShiftDetailView extends State<ShiftDetailView> {
   String _currentAddy;
   static const int OPEN_SHIFT = 0;
   static const int CHECKED_IN = 1;
-  static const int CLOCKIN_WINDOW_BEGIN = -10; //10m befor or 30m after
-  static const int CLOCKIN_WINDOW_END = 30; //10m before or 30m after
+  static const int CLOCKIN_WINDOW_BEGIN = -30; //10m befor or 30m after
+  static const int CLOCKIN_WINDOW_END = 1000000000; //10m before or 30m after
   //static const int CHECKED_OUT_BRK = 2;
   //static const int CHECKED_IN_BRK = 3;
   static const int CHECKED_OUT = 4;
@@ -172,7 +172,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       buttonHeight: 60,
       buttonText: sliderStatus,
       buttonColor: sliderColor,
-      successfulThreshold: 1.0,
+      successfulThreshold: 0.9,
       slideButtonIconColor: Color(0xFF05152B),
       radius: 8,
       onSlideSuccessCallback: () {
@@ -233,6 +233,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       );
     }
 
+    double c_width = MediaQuery.of(context).size.width*0.8;
 
     return Scaffold(
       resizeToAvoidBottomPadding: false,
@@ -252,7 +253,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       ),
       body: new Container(
         decoration: new BoxDecoration(
-          color: Colors.white,
+          color: Color(0xFFDAE0E0),
           border: new Border.all(color: Colors.black, width: 5.0),
           borderRadius: new BorderRadius.all(Radius.circular(10)),
         ),
@@ -261,41 +262,59 @@ class _ShiftDetailView extends State<ShiftDetailView> {
         Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
-              Row(
+              Container(
+                width: c_width,
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
+
                     Padding(padding: EdgeInsets.only(left: 25.0, top: 25),
                       child: Text('OrderID:${this.data.orderId}', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
                     ),
-                    Padding(padding: EdgeInsets.only(right: 25.0, top: 25),
-                      child: Text('Status: ${statusText}', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, backgroundColor: statusColor)),
-                    ),
+                  Container(
+                    child: Padding(padding: EdgeInsets.only(right: 25.0, top: 25),
+                      child: Container(decoration: myBoxDecoration(),
+                        child: Text('Status: ${statusText}', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, backgroundColor: statusColor)),
+                      ),
+                    ),),
                   ]),
-              Row(
+              ),
+            Container(
+              width: c_width,
+              child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     Padding(padding: EdgeInsets.only(left: 25.0, top: 25),
                       child: Text('${this.data.clientName}', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
                     ),
                   ]),
-              Row(
+              ),
+            Container(
+              width: c_width,
+              child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     Padding(padding: EdgeInsets.only(left: 25.0, top: 8),
                       child: Text('${this.data.regionName}', textAlign: TextAlign.start, style: TextStyle(fontStyle: FontStyle.italic, color: Colors.black, fontSize: 18)),
                     ),
                   ]),
-              Row(
+            ),
+            Container(
+              width: c_width,
+              child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Padding(padding: EdgeInsets.only(left: 25.0, top: 25),
+                    Padding(padding: EdgeInsets.only(left: 25.0, top: 8),
                       child: Text('Shift Start: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
                     ),
                     Padding(padding: EdgeInsets.only(right: 25.0, top: 8),
                       child: Text('${this.data.shiftStartTime}', textAlign: TextAlign.end, style: TextStyle( fontSize: 18)),
                     ),
                   ]),
-              Row(
+            ),
+            Container(
+              width: c_width,
+              child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     Padding(padding: EdgeInsets.only(left: 25.0, top: 8),
@@ -305,7 +324,10 @@ class _ShiftDetailView extends State<ShiftDetailView> {
                       child: Text('${this.data.shiftEndTime}', textAlign: TextAlign.end, style: TextStyle(fontSize: 18)),
                     ),
                   ]),
-              Row(
+           ),
+            Container(
+              width: c_width,
+              child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     Padding(padding: EdgeInsets.only(left: 25.0, top: 8),
@@ -315,24 +337,37 @@ class _ShiftDetailView extends State<ShiftDetailView> {
                       child: Text('${this.data.floor}', textAlign: TextAlign.end, style: TextStyle(fontSize: 18)),
                     ),
                   ]),
-              Padding(padding: EdgeInsets.only(right: 25.0, top: 18),
-                child:              RaisedButton(
-                  onPressed: () => MapsLauncher.launchQuery(
-                      '${this.myClientAddy.address}, ${this.myClientAddy.city}, ${this.myClientAddy.state} ${this.myClientAddy.zip}, USA'),
+            ),
+           Container(
+            width: c_width,
+            child: Padding(padding: EdgeInsets.only(right: 25.0, top: 18),
+                child: RaisedButton(
+                  onPressed: () =>
+                  {
+                    if(this.data.status != 'Open') {
+                      MapsLauncher.launchQuery('${this.myClientAddy.address}, ${this.myClientAddy.city}, ${this.myClientAddy.state} ${this.myClientAddy.zip}, USA'),
+                    }
+                  },
                   child: Text('${this.myClientAddy.address} ${this.myClientAddy.city} ${this.myClientAddy.state} ${this.myClientAddy.zip}', textAlign: TextAlign.center, style: TextStyle(color: Colors.black, fontSize: 16)),
                 ),
               ),
-              Row(
+            ),
+            Container(
+              width: c_width,
+              child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Padding(padding: EdgeInsets.only(left: 25.0, top: 25),
+                    Padding(padding: EdgeInsets.only(left: 25.0, top: 8),
                       child: Text('Specialty: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
                     ),
                     Padding(padding: EdgeInsets.only(right: 25.0, top: 8),
                       child: Text('${this.data.orderSpecialty}', textAlign: TextAlign.end, style: TextStyle(fontSize: 18)),
                     ),
                   ]),
-              Row(
+            ),
+           Container(
+              width: c_width,
+              child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     Padding(padding: EdgeInsets.only(left: 25.0, top: 8),
@@ -342,19 +377,27 @@ class _ShiftDetailView extends State<ShiftDetailView> {
                       child: Text('${this.data.orderCertification}', textAlign: TextAlign.end, style: TextStyle(fontSize: 18)),
                     ),
                   ]),
+            ),
               Padding(padding: EdgeInsets.only(right: 25.0, top: 18),
                 child: Text('NOTES', textAlign: TextAlign.center, style: TextStyle(decoration: TextDecoration.underline, fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
               ),
-              Padding(padding: EdgeInsets.only(right: 25.0, top: 18),
+              Container(
+                width: c_width,
+                child:
+                Padding(padding: EdgeInsets.only(right: 25.0, top: 18),
                 child: Text('${this.data.note}', textAlign: TextAlign.center, style: TextStyle(color: Colors.black, fontSize: 16)),
               ),
-
+                  ),
            Expanded(
              child:
               Align(
                 alignment: Alignment.bottomCenter,
-                child:
-                  myButton
+                child: Container(
+                  width: c_width,
+                  child: Padding(padding: EdgeInsets.only(right: 25.0, bottom: 10),
+                   child:  myButton
+                ),
+                ),
               ),
               ),
             ],
@@ -363,6 +406,11 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     );
   }
 
+  BoxDecoration myBoxDecoration() {
+    return BoxDecoration(
+      border: Border.all(),
+    );
+  }
 
   Future _postShiftInterest() async {
     try{
@@ -405,9 +453,9 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
 
-//    //debug
-//      lat = 39.861742;
-//      lon = -84.290875;
+    //debug
+      lat = 39.861742;
+      lon = -84.290875;
 
     String json = '{"tempId": "'+ this.data.tempId+'", "username": "'+Home.myUserName+'",' +'"clockedAddy": "'+ currentAddy+
         '",' +'"lat": "'+ lat.toString()+'",' +'"lon": "'+ lon.toString()+ '",' +'"shiftstatuskey": "'+ currentStatus.toString()+
@@ -484,9 +532,9 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     String url = AltoUtils.baseApiUrl + '/shift';
     Map<String, String> headers = {"Content-type": "application/json"};
 
-//    //debug
-//    lat = 39.861742;
-//    lon = -84.290875;
+    //debug
+    lat = 39.861742;
+    lon = -84.290875;
 
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
@@ -581,7 +629,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
           var date2 = DateTime.now();
           var difference = newDateTimeObj2.difference(date2).inMinutes;
           // currently set to allow clockin two hours after shift start
-          if( difference >= CLOCKIN_WINDOW_BEGIN && difference <= CLOCKIN_WINDOW_END) {
+          if( (difference >= CLOCKIN_WINDOW_BEGIN && difference <= CLOCKIN_WINDOW_END) )  {
             myButton = getMyButton();
           }
         });
