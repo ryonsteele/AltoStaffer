@@ -32,6 +32,14 @@
 	<string>This app needs to able to send GPS location to the company owned API to evaluate if the person is at the designated location for starting designated, agreed upon shift i.a.w. state law and company policy and procedure.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
     <string>This app needs to able to send GPS location to the company owned API to evaluate if the person is at the designated location for starting designated, agreed upon shift i.a.w. state law and company policy and procedure.</string>
+	<key>NSContactsUsageDescription</key>
+    <string>The app does not use this or call for it but your automated system said I need this. So. Here it is.</string>
+    <key>NSAppleMusicUsageDescription</key>
+    <string>The app does not use this or call for it but your automated system said I need this. So. Here it is.</string>
+    <key>NSMotionUsageDescription</key>
+    <string>The app does not use this or call for it but your automated system said I need this. So. Here it is.</string>
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>The app does not use this or call for it but your automated system said I need this. So. Here it is.</string>
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>fetch</string>
