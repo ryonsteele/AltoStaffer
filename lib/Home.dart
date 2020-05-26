@@ -518,9 +518,8 @@ class _HomeState extends State<Home> {
       platform = 'Android';
     } else if (Platform.isIOS) {
       platform = 'iOS';
-    }else {
-      throw new UnsupportedError("Unknown device type");
     }
+
     // set up POST request arguments
     String url = AltoUtils.baseApiUrl + '/login';
     Map<String, String> headers = {"Content-type": "application/json"};
@@ -657,8 +656,8 @@ class _HomeState extends State<Home> {
 
     // set up the AlertDialog
     AlertDialog alert = AlertDialog(
-      title: Text('There\'s been a connection issue!'),
-      content: Text("Please restart the app or try again soon"),
+      title: Text("Login Failed"),
+      content: Text("Please Call Alto for Support"),
       actions: [
         continueButton,
       ],

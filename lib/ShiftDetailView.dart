@@ -18,6 +18,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geocoder/geocoder.dart';
 import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
 import 'package:maps_launcher/maps_launcher.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class ShiftDetailView extends StatefulWidget {
 
@@ -30,7 +31,7 @@ class ShiftDetailView extends StatefulWidget {
 }
 
 
-class _ShiftDetailView extends State<ShiftDetailView> {
+class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserver {
 
   final GlobalKey<SlidingButtonState> _slideButtonKey = GlobalKey<SlidingButtonState>();
   TextEditingController _fNameFieldController = TextEditingController();
@@ -42,7 +43,7 @@ class _ShiftDetailView extends State<ShiftDetailView> {
   static const int OPEN_SHIFT = 0;
   static const int CHECKED_IN = 1;
   static const int CLOCKIN_WINDOW_BEGIN = -30; //10m befor or 30m after
-  static const int CLOCKIN_WINDOW_END = 1000000000; //10m before or 30m after
+  static const int CLOCKIN_WINDOW_END = 10; //10m before or 30m after
   //static const int CHECKED_OUT_BRK = 2;
   //static const int CHECKED_IN_BRK = 3;
   static const int CHECKED_OUT = 4;
@@ -62,8 +63,19 @@ class _ShiftDetailView extends State<ShiftDetailView> {
   String gTempId;
 
   _ShiftDetailView(Shifts data) {
+    WidgetsBinding.instance.addObserver(this);
     this.data = data;
     loadInit();
+  }
+
+
+  @override
+  void didChangeAppLifecycleState(final AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      setState(() {
+        loadInit();
+      });
+    }
   }
 
   Future loadInit() async {
@@ -86,15 +98,18 @@ class _ShiftDetailView extends State<ShiftDetailView> {
   }
 
 
+
   @override
   void initState() {
     super.initState();
     BackButtonInterceptor.add(myInterceptor);
+
   }
 
   @override
   void dispose() {
     BackButtonInterceptor.remove(myInterceptor);
+    WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
 
@@ -267,15 +282,17 @@ class _ShiftDetailView extends State<ShiftDetailView> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-
-                    Padding(padding: EdgeInsets.only(left: 25.0, top: 25),
+                     Expanded(
+                       child: Padding(padding: EdgeInsets.only(left: 25.0, top: 25),
                       child: Text('OrderID:${this.data.orderId}', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
-                    ),
-                  Container(
+                    ),),
+                     Expanded(
+                      child: Container(
                     child: Padding(padding: EdgeInsets.only(right: 25.0, top: 25),
                       child: Container(decoration: myBoxDecoration(),
+
                         child: Text('Status: ${statusText}', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, backgroundColor: statusColor)),
-                      ),
+                        ),),
                     ),),
                   ]),
               ),
@@ -284,9 +301,11 @@ class _ShiftDetailView extends State<ShiftDetailView> {
               child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                    Padding(padding: EdgeInsets.only(left: 25.0, top: 25),
+                     Expanded(
+                       child: Padding(padding: EdgeInsets.only(left: 25.0, top: 25),
+
                       child: Text('${this.data.clientName}', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
-                    ),
+                ), ),
                   ]),
               ),
             Container(
@@ -453,16 +472,34 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
 
-    //debug
-      lat = 39.861742;
-      lon = -84.290875;
+//    //debug
+//      lat = 39.861742;
+//      lon = -84.290875;
 
-    String json = '{"tempId": "'+ this.data.tempId+'", "username": "'+Home.myUserName+'",' +'"clockedAddy": "'+ currentAddy+
-        '",' +'"lat": "'+ lat.toString()+'",' +'"lon": "'+ lon.toString()+ '",' +'"shiftstatuskey": "'+ currentStatus.toString()+
-        '", "shiftSignoff": "'+ signOff + '", "orderId": "'+ this.data.orderId+'", "clientId": "'+ this.data.clientId+'"}';
+    StringBuffer buffer = new StringBuffer();
+    buffer.write('{"tempId": "');
+    buffer.write(this.data.tempId);
+    buffer.write('", "username": "');
+    buffer.write(Home.myUserName);
+    buffer.write('", "clockedAddy": "');
+    buffer.write(currentAddy);
+    buffer.write('", "lat": "');
+    buffer.write(lat.toString());
+    buffer.write('", "lon": "');
+    buffer.write(lon.toString());
+    buffer.write('", "shiftstatuskey": "');
+    buffer.write(currentStatus.toString());
+    buffer.write('", "shiftSignoff": "');
+    buffer.write(signOff);
+    buffer.write('", "orderId": "');
+    buffer.write(this.data.orderId);
+    buffer.write('", "clientId": "');
+    buffer.write(this.data.clientId);
+    buffer.write('" }');
+    String json = buffer.toString();
+
 
     // make POST request
-   // print(json);
     Response response = await post(url, headers: headers, body: json);
     // check the status code for the result
     int statusCode = response.statusCode;
@@ -479,10 +516,8 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     }
 
     } on Exception catch (exception) {
-      print(exception);
       showConnectionDialog(context);
     } catch (error) {
-      print(error);
       showConnectionDialog(context);
     }
     setState(() {});
@@ -514,10 +549,8 @@ class _ShiftDetailView extends State<ShiftDetailView> {
       }
 
     } on Exception catch (exception) {
-      print(exception);
       showConnectionDialog(context);
     } catch (error) {
-      print(error);
       showConnectionDialog(context);
     }
 
@@ -532,18 +565,36 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     String url = AltoUtils.baseApiUrl + '/shift';
     Map<String, String> headers = {"Content-type": "application/json"};
 
-    //debug
-    lat = 39.861742;
-    lon = -84.290875;
+//    //debug
+//    lat = 39.861742;
+//    lon = -84.290875;
 
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
-    String json = '{"tempId": "'+ this.data.tempId+'", "username": "'+Home.myUserName+'",' +'"clockedAddy": "'+ currentAddy+
-        '",' +'"lat": "'+ lat.toString()+'",' +'"lon": "'+ lon.toString()+ '",' +'"shiftstatuskey": "'+ currentStatus.toString()+
-        '", "shiftSignoff": "'+ signOff + '", "orderId": "'+ this.data.orderId+'", "breaks": "'+ tookBreak.toString() +'", "clientId": "'+ this.data.clientId+'"}';
+      StringBuffer buffer = new StringBuffer();
+      buffer.write('{"tempId": "');
+      buffer.write(this.data.tempId);
+      buffer.write('", "username": "');
+      buffer.write(Home.myUserName);
+      buffer.write('", "clockedAddy": "');
+      buffer.write(currentAddy);
+      buffer.write('", "lat": "');
+      buffer.write(lat.toString());
+      buffer.write('", "lon": "');
+      buffer.write(lon.toString());
+      buffer.write('", "shiftstatuskey": "');
+      buffer.write(currentStatus.toString());
+      buffer.write('", "shiftSignoff": "');
+      buffer.write(signOff);
+      buffer.write('", "orderId": "');
+      buffer.write(this.data.orderId);
+      buffer.write('", "clientId": "');
+      buffer.write(this.data.clientId);
+      buffer.write('", "breaks": "');
+      buffer.write(tookBreak.toString());
+      buffer.write('" }');
+      String json = buffer.toString();
 
-    print(json);
-    print(url);
 
     // make POST request
     Response response = await patch(url, headers: headers, body: json);
@@ -757,7 +808,17 @@ class _ShiftDetailView extends State<ShiftDetailView> {
     });
   }
 
-  _getCurrentLocationInit() {
+  _getCurrentLocationInit() async{
+
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.location,
+      Permission.locationAlways,
+      Permission.locationWhenInUse,
+    ].request();
+    print(statuses[Permission.location]);
+    print(statuses[Permission.locationAlways]);
+    print(statuses[Permission.locationWhenInUse]);
+
     geolocator
         .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
         .then((Position position) {
