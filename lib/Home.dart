@@ -5,7 +5,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:io' show Platform;
 import 'package:http/http.dart';
-import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/sessionkey.dart';
 import 'clipper.dart';
@@ -42,8 +41,6 @@ class _HomeState extends State<Home> {
   String _email;
   String _password;
   static String deviceToken = "";
-  String _displayName;
-  bool _obsecure = false;
   AuthService auth = new AuthService();
 
   @override
@@ -131,7 +128,6 @@ class _HomeState extends State<Home> {
     }
 
     //login and register fuctions
-
     void _loginUser() {
       _email = _emailController.text;
       _password = _passwordController.text;
@@ -142,8 +138,6 @@ class _HomeState extends State<Home> {
       }else{
         _makePostRequest();
       }
-
-     // navigateToLanding(context);
     }
 
     void _registerUser() {
@@ -473,18 +467,6 @@ class _HomeState extends State<Home> {
         ));
   }
 
-//  void getToken(){
-//    firebaseMessaging.getToken().then((token) {
-//      //update(token);
-//      deviceToken = token;
-//      if((deviceToken == null || deviceToken.isEmpty) && fcmTokenCount < 3){
-//        fcmTokenCount++;
-//        getToken();
-//      }
-//      fcmTokenCount = 0;
-//    });
-//  }
-
   Future getSessionKey() async {
     List keys = new List<SessionKey>();
     Response response;
@@ -502,7 +484,6 @@ class _HomeState extends State<Home> {
 
     keys=(json.decode(response.body) as List).map((i) => SessionKey.fromJson(i)).toList();
 
-    //todo utils
     for(SessionKey rec in keys ){
       print(rec.sessionKey);
       Home.keyNumber = rec;
@@ -514,10 +495,10 @@ class _HomeState extends State<Home> {
     try{
 
     String platform = '';
-    if (Platform.isAndroid) {
-      platform = 'Android';
-    } else if (Platform.isIOS) {
+    if (Platform.isIOS || Theme.of(context).platform == TargetPlatform.iOS) {
       platform = 'iOS';
+    }else{
+      platform = 'Android';
     }
 
     // set up POST request arguments
@@ -568,9 +549,9 @@ class _HomeState extends State<Home> {
         Navigator.push(context, MaterialPageRoute(
             builder: (context) => LandPage(tempid: tempid, backTrigger: 0)));
       } on FormatException catch (e) {
-        print("That string didn't look like Json.");
+        print(e);
       } on NoSuchMethodError catch (e) {
-        print('That string was null!');
+        print(e);
       }
     }else if(statusCode == 401) {
       showInvalidPasswordDialog(context);

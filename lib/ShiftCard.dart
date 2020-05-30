@@ -1,6 +1,7 @@
 
 
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:alto_staffing/models/shifts.dart';
 import 'ShiftDetailView.dart';
 
@@ -51,10 +52,22 @@ class ShiftCardState extends State<ShiftCard> {
                           color: Colors.white70,
                           child: ListTile(
                             leading: Text('${baby.status}',style: TextStyle(fontSize: 14.0,fontWeight: FontWeight.bold)),
-                            title: Text('${baby.clientName}',style: TextStyle(fontSize: 14.0,fontWeight: FontWeight.bold)),
+                            title: Text('${baby.clientName}      ${getHours()} Hr',style: TextStyle(fontSize: 14.0,fontWeight: FontWeight.bold)),
                             subtitle: Text('${baby.city}    Start: ${baby.shiftStartTime}'),
                           )),
                     ]))));
+  }
+
+   int getHours(){
+    try {
+      DateTime shiftStart = new DateFormat("MM/dd/yyyy hh:mm a").parse(baby.shiftStartTime);
+      DateTime shiftEnd = new DateFormat("MM/dd/yyyy hh:mm a").parse(baby.shiftEndTime);
+      return shiftEnd.difference(shiftStart).inHours;
+
+    }catch(ex){
+      print(ex);
+     }
+    return 0;
   }
 
   @override

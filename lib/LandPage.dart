@@ -14,10 +14,8 @@ import 'package:alto_staffing/Home.dart';
 import 'ShiftPrefPage.dart';
 import 'dart:convert';
 import 'ShiftCard.dart';
-import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'ContactPage.dart';
 import 'package:device_calendar/device_calendar.dart';
-import 'models/Specs.dart';
 import 'package:charts_flutter/flutter.dart' as charts;
 
 class LandPage extends StatefulWidget {
@@ -231,7 +229,6 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
 
 
       if(response.body.contains('html')) return null;
-      //print(response.body);
       setState(() {
         this.historicals=Historicals.fromJson(json.decode(response.body));
       });
@@ -262,8 +259,6 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
         this.openShifts=(json.decode(openResponse.body) as List).map((i) =>
             Shifts.fromJson(i)).toList();
 
-       // this.openShifts.sort((a, b) => a.shiftStartTime.compareTo(b.shiftStartTime));
-
         if (this.openShifts == null || this.openShifts.isEmpty){
           setState(() {this.loadMessage = 'You have no shifts scheduled, please call Alto to schedule shifts.';});
         }
@@ -290,7 +285,6 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
           },),
            onRefresh: getSchedData,
           )
-
 
         : Center(child: CircularProgressIndicator());
     }else{
@@ -578,17 +572,12 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
       AuthService auth = new AuthService();
       String token = auth.getToken();
 
-
       String json = '{"username": "'+ Home.myUserName+'", "devicetoken": "'+token+'"}';
 
       // make POST request
-      // print(json);
       Response response = await post(url, headers: headers, body: json);
-      // check the status code for the result
       int statusCode = response.statusCode;
-      // this API passes back the id of the new item added to the body
       String body = response.body;
-
 
     } on Exception catch (exception) {
       print(exception);

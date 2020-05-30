@@ -52,7 +52,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   static String statusText = "";
   static MaterialColor statusColor = Colors.lightBlue;
   static String sliderStatus = "Slide to Clock In/out";
-  SlidingButton myButton;
+  static bool isLoading = false;
+  Widget myButton;
   ClientAddress myClientAddy = new ClientAddress("","","","","","","");
 
   static int currentStatus = 0;
@@ -80,6 +81,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
   Future loadInit() async {
     backTrigger = 0;
+    sliderStatus = "Slide to Clock In/out";
 
     if(this.data.status == 'Open') {
       backTrigger = 1;
@@ -103,6 +105,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   void initState() {
     super.initState();
     BackButtonInterceptor.add(myInterceptor);
+    isLoading = false;
 
   }
 
@@ -181,28 +184,39 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     showDialog(context: context, builder: (BuildContext context) => errorDialog);
   }
 
-  SlidingButton getMyButton(){
-    return SlidingButton(
-      key: _slideButtonKey,
-      buttonHeight: 60,
-      buttonText: sliderStatus,
-      buttonColor: sliderColor,
-      successfulThreshold: 0.9,
-      slideButtonIconColor: Color(0xFF05152B),
-      radius: 8,
-      onSlideSuccessCallback: () {
-        //_incrementCounter();
-        if(this.data.status == 'Open') {
-          _postShiftInterest();
-        }else {
-          showAlertDialog(context);
-        }
-        Future.delayed(Duration(seconds: 1), () {
-          if(_slideButtonKey != null && _slideButtonKey.currentState != null) {
-            _slideButtonKey.currentState.reset();
+  Widget getMyButton(){
+
+    if(isLoading) {
+      return Center(
+        child: CircularProgressIndicator(),
+      );
+    }else {
+      return new SlidingButton(
+        key: _slideButtonKey,
+        buttonHeight: 60,
+        buttonText: sliderStatus,
+        buttonColor: sliderColor,
+        successfulThreshold: 0.9,
+        slideButtonIconColor: Color(0xFF05152B),
+        radius: 8,
+        onSlideSuccessCallback: () {
+          //_incrementCounter();
+          myButton = Center(child: CircularProgressIndicator());
+          if (this.data.status == 'Open') {
+            _postShiftInterest();
+          } else {
+            showAlertDialog(context);
           }
-        });
+          Future.delayed(Duration(seconds: 1), () {
+            if (_slideButtonKey != null &&
+                _slideButtonKey.currentState != null) {
+              isLoading = true;
+              _slideButtonKey.currentState.reset();
+            }
+          });
         },);
+    }
+
   }
 
 
@@ -273,61 +287,47 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
           borderRadius: new BorderRadius.all(Radius.circular(10)),
         ),
         margin: const EdgeInsets.only(top: 5.0, left: 5.0, right: 5.0, bottom: 5.0),
+        child:new SingleChildScrollView(
         child:
         Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: <Widget>[
               Container(
                 width: c_width,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                     Expanded(
-                       child: Padding(padding: EdgeInsets.only(left: 25.0, top: 25),
-                      child: Text('OrderID:${this.data.orderId}', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
-                    ),),
-                     Expanded(
-                      child: Container(
+                   Padding(padding: EdgeInsets.only(left: 25.0, top: 25),
+                      child: Text('OrderID:${this.data.orderId}', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 14)),
+                    ),
+                    Container(
                     child: Padding(padding: EdgeInsets.only(right: 25.0, top: 25),
-                      child: Container(decoration: myBoxDecoration(),
+                      child: Container(
 
-                        child: Text('Status: ${statusText}', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, backgroundColor: statusColor)),
+                        child: Text(' Status: ${statusText} ', textAlign: TextAlign.end, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, backgroundColor: statusColor)),
                         ),),
-                    ),),
+                    ),
                   ]),
               ),
-            Container(
-              width: c_width,
-              child: Row(
+              Container(
+                width: c_width,
+                child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
-                     Expanded(
-                       child: Padding(padding: EdgeInsets.only(left: 25.0, top: 25),
+                     Padding(padding: EdgeInsets.only(left: 25.0, top: 25),
 
-                      child: Text('${this.data.clientName}', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
-                ), ),
+                      child: Text('${this.data.clientName}', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 14)),
+                  ),
                   ]),
-              ),
+                ),
             Container(
               width: c_width,
               child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     Padding(padding: EdgeInsets.only(left: 25.0, top: 8),
-                      child: Text('${this.data.regionName}', textAlign: TextAlign.start, style: TextStyle(fontStyle: FontStyle.italic, color: Colors.black, fontSize: 18)),
-                    ),
-                  ]),
-            ),
-            Container(
-              width: c_width,
-              child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Padding(padding: EdgeInsets.only(left: 25.0, top: 8),
-                      child: Text('Shift Start: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
-                    ),
-                    Padding(padding: EdgeInsets.only(right: 25.0, top: 8),
-                      child: Text('${this.data.shiftStartTime}', textAlign: TextAlign.end, style: TextStyle( fontSize: 18)),
+                      child: Text('${this.data.regionName}', textAlign: TextAlign.start, style: TextStyle(fontStyle: FontStyle.italic, color: Colors.black, fontSize: 14)),
                     ),
                   ]),
             ),
@@ -337,10 +337,23 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     Padding(padding: EdgeInsets.only(left: 25.0, top: 8),
-                      child: Text('Shift End: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
+                      child: Text('Shift Start: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 14)),
                     ),
                     Padding(padding: EdgeInsets.only(right: 25.0, top: 8),
-                      child: Text('${this.data.shiftEndTime}', textAlign: TextAlign.end, style: TextStyle(fontSize: 18)),
+                      child: Text('${this.data.shiftStartTime}', textAlign: TextAlign.end, style: TextStyle( fontSize: 14)),
+                    ),
+                  ]),
+            ),
+            Container(
+              width: c_width,
+              child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Padding(padding: EdgeInsets.only(left: 25.0, top: 8),
+                      child: Text('Shift End: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 14)),
+                    ),
+                    Padding(padding: EdgeInsets.only(right: 25.0, top: 8),
+                      child: Text('${this.data.shiftEndTime}', textAlign: TextAlign.end, style: TextStyle(fontSize: 14)),
                     ),
                   ]),
            ),
@@ -350,10 +363,10 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     Padding(padding: EdgeInsets.only(left: 25.0, top: 8),
-                      child: Text('Floor: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
+                      child: Text('Floor: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 14)),
                     ),
                     Padding(padding: EdgeInsets.only(right: 25.0, top: 8),
-                      child: Text('${this.data.floor}', textAlign: TextAlign.end, style: TextStyle(fontSize: 18)),
+                      child: Text('${this.data.floor}', textAlign: TextAlign.end, style: TextStyle(fontSize: 14)),
                     ),
                   ]),
             ),
@@ -367,7 +380,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
                       MapsLauncher.launchQuery('${this.myClientAddy.address}, ${this.myClientAddy.city}, ${this.myClientAddy.state} ${this.myClientAddy.zip}, USA'),
                     }
                   },
-                  child: Text('${this.myClientAddy.address} ${this.myClientAddy.city} ${this.myClientAddy.state} ${this.myClientAddy.zip}', textAlign: TextAlign.center, style: TextStyle(color: Colors.black, fontSize: 16)),
+                  child: Text('${this.myClientAddy.address} ${this.myClientAddy.city} ${this.myClientAddy.state} ${this.myClientAddy.zip}', textAlign: TextAlign.center, style: TextStyle(color: Colors.black, fontSize: 12)),
                 ),
               ),
             ),
@@ -377,10 +390,10 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     Padding(padding: EdgeInsets.only(left: 25.0, top: 8),
-                      child: Text('Specialty: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
+                      child: Text('Specialty: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 14)),
                     ),
                     Padding(padding: EdgeInsets.only(right: 25.0, top: 8),
-                      child: Text('${this.data.orderSpecialty}', textAlign: TextAlign.end, style: TextStyle(fontSize: 18)),
+                      child: Text('${this.data.orderSpecialty}', textAlign: TextAlign.end, style: TextStyle(fontSize: 14)),
                     ),
                   ]),
             ),
@@ -390,39 +403,35 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     Padding(padding: EdgeInsets.only(left: 25.0, top: 8),
-                      child: Text('Certification: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
+                      child: Text('Certification: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 14)),
                     ),
                     Padding(padding: EdgeInsets.only(right: 25.0, top: 8),
-                      child: Text('${this.data.orderCertification}', textAlign: TextAlign.end, style: TextStyle(fontSize: 18)),
+                      child: Text('${this.data.orderCertification}', textAlign: TextAlign.end, style: TextStyle(fontSize: 14)),
                     ),
                   ]),
             ),
               Padding(padding: EdgeInsets.only(right: 25.0, top: 18),
-                child: Text('NOTES', textAlign: TextAlign.center, style: TextStyle(decoration: TextDecoration.underline, fontWeight: FontWeight.bold, color: Colors.black, fontSize: 22)),
+                child: Text('NOTES', textAlign: TextAlign.center, style: TextStyle(decoration: TextDecoration.underline, fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
               ),
               Container(
                 width: c_width,
                 child:
-                Padding(padding: EdgeInsets.only(right: 25.0, top: 18),
-                child: Text('${this.data.note}', textAlign: TextAlign.center, style: TextStyle(color: Colors.black, fontSize: 16)),
+                Padding(padding: EdgeInsets.only(right: 25.0, top: 18, bottom: 125),
+                child: Text('${this.data.note}', textAlign: TextAlign.center, style: TextStyle(color: Colors.black, fontSize: 13)),
               ),
                   ),
-           Expanded(
-             child:
               Align(
                 alignment: Alignment.bottomCenter,
                 child: Container(
                   width: c_width,
-                  child: Padding(padding: EdgeInsets.only(right: 25.0, bottom: 10),
+                  child: Padding(padding: EdgeInsets.only(right: 25.0, bottom: 100),
                    child:  myButton
                 ),
                 ),
               ),
-              ),
             ],
         ),
-      ),
-    );
+    ),),);
   }
 
   BoxDecoration myBoxDecoration() {
@@ -448,7 +457,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     int statusCode = response.statusCode;
     // this API passes back the id of the new item added to the body
     String body = response.body;
-
+    isLoading = false;
     if(statusCode >= 200 && statusCode < 300){
       showInterestSuccessDialog(context);
     }else{
@@ -462,6 +471,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       print(error);
       showConnectionDialog(context);
     }
+    setState(() {myButton = null;});
   }
 
   Future _makePostRequest(String currentAddy, double lat, double lon) async {
@@ -505,7 +515,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     int statusCode = response.statusCode;
     // this API passes back the id of the new item added to the body
     String body = response.body;
-
+    isLoading = false;
     if(statusCode >= 200 && statusCode < 300) {
       currentStatus = CHECKED_IN;
       Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId, backTrigger: backTrigger,)));
@@ -520,7 +530,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     } catch (error) {
       showConnectionDialog(context);
     }
-    setState(() {});
+    setState(() {myButton = getMyButton();});
   }
 
   Future _makeSentHomeRequest() async {
@@ -602,7 +612,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     int statusCode = response.statusCode;
     // this API passes back the id of the new item added to the body
     String body = response.body;
-
+    isLoading = false;
     if(statusCode >= 200 && statusCode < 300){
       currentStatus++;
       if(currentStatus >= CHECKED_OUT){
@@ -622,7 +632,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       print(error);
       showConnectionDialog(context);
     }
-    setState(() {});
+    setState(() {myButton = getMyButton();});
   }
 
   Future _getClient() async {
