@@ -535,6 +535,7 @@ class _HomeState extends State<Home> {
         prefs.setString('second_key', '');
       }
 
+
       prefs.setBool('init_key', false);
 
       try {

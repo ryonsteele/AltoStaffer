@@ -53,6 +53,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   static MaterialColor statusColor = Colors.lightBlue;
   static String sliderStatus = "Slide to Clock In/out";
   static bool isLoading = false;
+  String optionalNoteText = "";
   Widget myButton;
   ClientAddress myClientAddy = new ClientAddress("","","","","","","");
 
@@ -417,7 +418,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
                 width: c_width,
                 child:
                 Padding(padding: EdgeInsets.only(right: 25.0, top: 18, bottom: 125),
-                child: Text('${this.data.note}', textAlign: TextAlign.center, style: TextStyle(color: Colors.black, fontSize: 13)),
+                child: Text('${this.optionalNoteText} \n ${this.data.note}', textAlign: TextAlign.center, style: TextStyle(color: Colors.black, fontSize: 13)),
               ),
                   ),
               Align(
@@ -482,7 +483,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
 
-//    //debug
+    //debug
 //      lat = 39.861742;
 //      lon = -84.290875;
 
@@ -575,7 +576,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     String url = AltoUtils.baseApiUrl + '/shift';
     Map<String, String> headers = {"Content-type": "application/json"};
 
-//    //debug
+    //debug
 //    lat = 39.861742;
 //    lon = -84.290875;
 
@@ -716,6 +717,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
 
       if(liveShift.shiftEndTimeActual != null){
+        this.optionalNoteText = "Clocked in at: " + formatDates(liveShift.shiftStartTimeActual) +" \nClocked out at: " + formatDates(liveShift.shiftEndTimeActual);
         currentStatus = CHECKED_OUT;
         myButton = null;
       }
@@ -991,6 +993,12 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
         return alert;
       },
     );
+  }
+
+  String formatDates(String sDate){
+    String formatted;//2020-02-03T08:00:00
+    DateTime dateTime = new DateFormat("yyyy-MM-ddTHH:mm:ss").parse(sDate);
+    return DateFormat.yMd().add_jm().format(dateTime);
   }
 
   showInvalidGeoDialog(BuildContext context) {

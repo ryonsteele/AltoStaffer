@@ -409,53 +409,6 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
         ),),),
     ],), );
 
-//      return Container(
-//        color: Color(0xFFDAE0E0),
-//        width: c_width,
-//        child: Column(
-//          mainAxisAlignment: MainAxisAlignment.start,
-//          mainAxisSize: MainAxisSize.max,
-//          children: <Widget>[
-//
-//            Padding(padding: EdgeInsets.only(left: 0.0, bottom: 5, top: 15),
-//              child: Text('Hours Worked Period ', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 16)),
-//
-//            ),
-//        Container(
-//         width: c_width,
-//          child: Padding(padding: EdgeInsets.only(right: 0.0, bottom: 100, top: 5),
-//              child: Text('${this.historicals.dateWindowBegin} to ${this.historicals.dateWindowEnd}', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 12)),
-//            ),
-//          ),
-//          Container(
-//            width: c_width,
-//            child: Row(
-//                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                children: <Widget>[
-//                  Padding(padding: EdgeInsets.only(left: 25.0, bottom: 50),
-//                    child: Text('All Future Hours Scheduled: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 16)),
-//                  ),
-//                  Padding(padding: EdgeInsets.only(right: 25.0, bottom: 50),
-//                    child: Text('${this.historicals.hoursScheduled}', textAlign: TextAlign.end, style: TextStyle(fontSize: 16)),
-//                  ),
-//                ]),
-//            ),
-//          Container(
-//            width: c_width,
-//            child: Row(
-//                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-//                children: <Widget>[
-//                  Padding(padding: EdgeInsets.only(left: 25.0),
-//                    child: Text('Total Hours Worked in Pay Period: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 16)),
-//                  ),
-//                  Padding(padding: EdgeInsets.only(right: 25.0),
-//                    child: Text('${this.historicals.hoursWorked}', textAlign: TextAlign.end, style: TextStyle(fontSize: 16)),
-//                  ),
-//                ]),
-//          ),
-//          ],
-//        ),
-//      );
 
     }else{
 
@@ -531,9 +484,31 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
     //If events are successfully created/added, then the events that were
     // CREATED/UPDATED will be displayed to the user in the status string
 
-    var evString = new StringBuffer('');
-    SharedPreferences prefs = await SharedPreferences.getInstance();
+   var evString = new StringBuffer('');
+   SharedPreferences prefs = await SharedPreferences.getInstance();
 
+    for(String key in prefs.getKeys()){
+      bool found = false;
+
+      try {
+        for (var shift in this.shifts) {
+
+          var search = shift.clientName.substring(0,4) + new DateFormat("MM/dd/yyyy HH:mm a").parse(shift.shiftStartTime).toIso8601String();
+          if(search == key){
+            //print("Event match found");
+            found = true;
+          }
+         }
+      if(!found){
+        //print("Event match NOT found, deleting event");
+        await _deviceCalendarPlugin.deleteEvent(_selectedCalendar.id, prefs.getString(key));
+      }
+      }catch(e){
+        //not a calendar event, move on
+      }
+    }
+
+    //print("Adding new events");
     for (var shift in this.shifts) {
       CalEvent evnt = new CalEvent(shift.clientName);
       evnt.readyForCalendar = true;
@@ -558,6 +533,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
         if (createEventResult.isSuccess &&
             (createEventResult.data?.isNotEmpty ?? false)) {
           prefs.setString(evnt.getPrefKey(), createEventResult.data);
+          print("Adding new event: " + createEventResult.data + " With Key: " + evnt.getPrefKey());
           evString.write(evnt.eventName + '\n');
         }
       }
