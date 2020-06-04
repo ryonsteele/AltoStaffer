@@ -9,6 +9,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/CalEvent.dart';
 import 'models/Historicals.dart';
+import 'ResourcesPage.dart';
 import 'models/shifts.dart';
 import 'package:alto_staffing/Home.dart';
 import 'ShiftPrefPage.dart';
@@ -85,6 +86,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
       "Settings",
       "Contact Alto",
       "Shift Preferences",
+      "Important Resources",
       "Logout",
     ]; //The list of values we want on the dropdown
     String _currentlySelected = "Settings"; //var to hold currently selected value
@@ -115,6 +117,10 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
               }else if(_currentlySelected.trim() == "Shift Preferences"){
                 Navigator.push(context, MaterialPageRoute(
                     builder: (context) => ShiftPrefPage(tempid: AppState.tempId)));
+
+              }else if(_currentlySelected.trim() == "Important Resources"){
+                Navigator.push(context, MaterialPageRoute(
+                    builder: (context) => ResourcesPage(tempid: AppState.tempId)));
 
               }else if(_currentlySelected.trim() == "Logout"){
                 Navigator.pushReplacement(context, MaterialPageRoute(

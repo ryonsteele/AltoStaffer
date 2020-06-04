@@ -20,6 +20,8 @@ import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
 import 'package:maps_launcher/maps_launcher.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'ResourcesPage.dart';
+
 class ShiftDetailView extends StatefulWidget {
 
   final Shifts data;
@@ -230,7 +232,9 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
     final List<String> _dropdownValues = [
       "Settings",
-      "Sent Home"
+      "Sent Home",
+      "Important Resources",
+      "Logout"
     ]; //The list of values we want on the dropdown
     String _currentlySelected = ""; //var to hold currently selected value
 
@@ -251,8 +255,15 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
           //once dropdown changes, update the state of out currentValue
           setState(() {
             _currentlySelected = value;
-            if(_currentlySelected.trim() != 'Settings'){
+            if(_currentlySelected.trim() == 'Sent Home'){
               showSentHomeDialog(context);
+            }else if(_currentlySelected.trim() == "Important Resources"){
+              Navigator.push(context, MaterialPageRoute(
+                  builder: (context) => ResourcesPage(tempid: gTempId)));
+
+            }else if(_currentlySelected.trim() == "Logout"){
+              Navigator.pushReplacement(context, MaterialPageRoute(
+                  builder: (context) => Home(bypassSplash: false,)));
             }
           });
         },

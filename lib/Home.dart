@@ -5,6 +5,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:io' show Platform;
 import 'package:http/http.dart';
+import 'package:package_info/package_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/sessionkey.dart';
 import 'clipper.dart';
@@ -13,6 +14,7 @@ import 'LandPage.dart';
 
 class Home extends StatefulWidget {
   static String myUserName = "";
+  static String versions = "";
   static SessionKey keyNumber;
   bool bypassSplash = false;
 
@@ -160,7 +162,7 @@ class _HomeState extends State<Home> {
     void _loginSheet() {
       _scaffoldKey.currentState.showBottomSheet<void>((BuildContext context) {
         return DecoratedBox(
-          decoration: BoxDecoration(color: Theme.of(context).canvasColor),
+          decoration: BoxDecoration(color: Color(0xFF0B859E)),
           child: ClipRRect(
             borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(40.0),
@@ -290,7 +292,7 @@ class _HomeState extends State<Home> {
     void _registerSheet() {
       _scaffoldKey.currentState.showBottomSheet<void>((BuildContext context) {
         return DecoratedBox(
-          decoration: BoxDecoration(color: Theme.of(context).canvasColor),
+          decoration: BoxDecoration(color: Color(0xFF0B859E)),
           child: ClipRRect(
             borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(40.0),
@@ -569,6 +571,10 @@ class _HomeState extends State<Home> {
   }
 
   Future loadPrefs() async{
+
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    Home.versions  = packageInfo.version;
+
      prefs = await SharedPreferences.getInstance();
      _emailController.text = prefs.getString('first_key') ?? '';
      _email = prefs.getString('first_key') ?? '';

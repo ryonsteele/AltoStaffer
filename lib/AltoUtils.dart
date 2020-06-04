@@ -8,6 +8,10 @@ class AltoUtils {
    static const String baseHcsUrl = 'https://ctms.contingenttalentmanagement.com/CirrusConcept/clearConnect/2_0/index.cfm';
    static const String suCreds = '&username=rsteele&password=altoApp1!';
 
+   static const String url1 = 'https://ctms.contingenttalentmanagement.com/CirrusConcept/workforceportal';
+   static const String url2 = 'https://www.heartlandcheckview.com';
+   static const String url3 = 'https://www.altostaffing.com';
+
    static getCerts() {
      return [
        "CMA",

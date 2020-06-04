@@ -7,6 +7,7 @@ import 'package:alto_staffing/Home.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:custom_switch_button/custom_switch_button.dart';
 
+import 'LandPage.dart';
 import 'MultiSelectChip.dart';
 
 
@@ -52,6 +53,15 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
     return Scaffold(
       appBar: AppBar(
         title: Text('Filter Offerings'),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: tempid, backTrigger: 0,)));
+            },
+          ),
+          //Add the dropdown widget to the `Action` part of our appBar. it can also be among the `leading` part
+        ],
         backgroundColor: Color(0xFF0B859E),
       ),
       backgroundColor: Colors.white,
