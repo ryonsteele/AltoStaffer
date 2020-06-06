@@ -591,7 +591,7 @@ class _HomeState extends State<Home> {
       } on NoSuchMethodError catch (e) {
         print(e);
       }
-    }else if(statusCode == 401) {
+    }else if(statusCode == 401 || (body != null && !body.isEmpty && statusCode == 400) ) {
       showInvalidPasswordDialog(context, body);
 
     }else{
