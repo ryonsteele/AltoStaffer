@@ -388,7 +388,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
                 child: RaisedButton(
                   onPressed: () =>
                   {
-                    if(this.data.status != 'Open') {
+                    if (this.data.status != 'Open') {
                       MapsLauncher.launchQuery('${this.myClientAddy.address}, ${this.myClientAddy.city}, ${this.myClientAddy.state} ${this.myClientAddy.zip}, USA'),
                     }
                   },

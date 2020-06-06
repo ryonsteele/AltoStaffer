@@ -2,6 +2,7 @@
 
 import 'package:alto_staffing/AltoUtils.dart';
 import 'package:alto_staffing/AuthService.dart';
+import 'package:alto_staffing/MessageCard.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/http.dart';
@@ -40,6 +41,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
   Calendar _selectedCalendar;
   List shifts;
   List openShifts;
+  List newMessages;
   Historicals historicals;
 
   AppState(String tid, int backtrigger) {
@@ -59,7 +61,12 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
     if(backTrigger == 0) {
       getScheduled(false);
     }else{
-      getOpens(false);
+      if(Home.openShifts == null || Home.openShifts.isEmpty) {
+        getOpens();
+      }
+//      }else{
+//        loadingOpensListView(Home.openShifts);
+//      }
     }
     super.initState();
   }
@@ -140,7 +147,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
         debugShowCheckedModeBanner: false,
         home: DefaultTabController(
           initialIndex: backTrigger,
-         length: 3,
+         length: 4,
          child: Scaffold(
         resizeToAvoidBottomPadding: false,
         key: _scaffoldKey,
@@ -155,15 +162,23 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
             if(index == 0){
               getScheduled(false);
             }else if(index ==1){
-              getOpens(false);
+              if(Home.openShifts == null || Home.openShifts.isEmpty) {
+                getOpens();
+              }
             }else if(index ==2){
               getHistorical();
-            }
+            }else if(index ==3){
+              setState(() {
+                this.newMessages = Home.messages;
+              });
+               //print(Home.messages);
+             }
           },
           tabs: [
             Tab(icon: Icon(Icons.calendar_today)),
             Tab(icon: Icon(Icons.local_offer)),
             Tab(icon: Icon(Icons.hourglass_full)),
+            Tab(icon: Icon(Icons.mail_outline)),
           ],
         ),
       ),
@@ -176,10 +191,13 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
         child: loadingScheduledListView(this.shifts),
         ),
         Center(
-         child: loadingOpensListView(this.openShifts),
+         child: loadingOpensListView(Home.openShifts),
           ),
         Center(
           child: loadingHistoryView(this.historicals),
+          ),
+         Center(
+           child: loadingMessagesView(),
           ),
          ],
         ),
@@ -222,7 +240,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
   }
 
   Future getHistorical() async {
-    this.loadMessage = 'Loading....';
+    this.loadMessage = '  Loading....';
     this.shifts = new List<Shifts>();
     Response response;
     try {
@@ -249,10 +267,10 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
     }
   }
 
-  Future getOpens(bool clear) async {
-    if(clear && this.openShifts != null && this.openShifts.isNotEmpty) this.openShifts.clear();
+  Future getOpens() async {
+
     this.openShifts = new List<Shifts>();
-    this.loadMessage = 'Loading....';
+    this.loadMessage = '  Loading....';
     Response openResponse;
     try {
       openResponse = await http.get(AltoUtils.baseApiUrl + '/mobileshifts/open/' + tempId);
@@ -266,7 +284,9 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
             Shifts.fromJson(i)).toList();
 
         if (this.openShifts == null || this.openShifts.isEmpty){
-          setState(() {this.loadMessage = 'You have no shifts scheduled, please call Alto to schedule shifts.';});
+          setState(() {this.loadMessage = '  You have no shifts scheduled, please call Alto to schedule shifts.';});
+        }else{
+            Home.openShifts = this.openShifts;
         }
       setState(() {});
     } on Exception catch (exception) {
@@ -298,7 +318,31 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
       return ListView.builder(
           itemCount: 1,
           itemBuilder: (context, index) {
-            return Text(this.loadMessage);
+            return Text(this.loadMessage,style: TextStyle(fontSize: 14.0,fontWeight: FontWeight.bold));
+          });
+
+    }
+  }
+
+  loadingMessagesView() {
+    if(this.newMessages != null && this.newMessages.isNotEmpty){
+      this.newMessages = this.newMessages.reversed.toList();
+      return this.newMessages.length != 0
+          ? RefreshIndicator( child: ListView.builder(
+        itemCount: this.newMessages != null ? this.newMessages.length : 0,
+        itemBuilder: (context, index) {
+          return MessageCard(this.newMessages[index]);
+        },),
+        onRefresh: getSchedData,
+      )
+
+          : Center(child: CircularProgressIndicator());
+    }else{
+
+      return ListView.builder(
+          itemCount: 1,
+          itemBuilder: (context, index) {
+            return Text('  No New Messages. ',style: TextStyle(fontSize: 14.0,fontWeight: FontWeight.bold));
           });
 
     }
@@ -307,7 +351,9 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
   Future<void> getOpenData() async{
     this.openShifts.clear();
     setState(() {
-      getOpens(false);
+      if(Home.openShifts == null || Home.openShifts.isEmpty) {
+        getOpens();
+      }
     });
   }
 
@@ -552,7 +598,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
       String url = AltoUtils.baseApiUrl + '/token';
       Map<String, String> headers = {"Content-type": "application/json"};
       AuthService auth = new AuthService();
-      String token = auth.getToken();
+      String token = Home.deviceToken;
 
       String json = '{"username": "'+ Home.myUserName+'", "devicetoken": "'+token+'"}';
 

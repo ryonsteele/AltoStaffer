@@ -5,6 +5,9 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart' as flutterLocalNotificationsPlugin;
 import 'package:rxdart/rxdart.dart';
 
+import 'Home.dart';
+import 'models/MessageObj.dart';
+
 
 
 class ReceivedNotification {
@@ -24,7 +27,7 @@ class ReceivedNotification {
 
 class AuthService {
 
-  final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
+//  final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
   final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin = FlutterLocalNotificationsPlugin();
   NotificationAppLaunchDetails notificationAppLaunchDetails;
   final BehaviorSubject<ReceivedNotification> didReceiveLocalNotificationSubject = BehaviorSubject<ReceivedNotification>();
@@ -32,59 +35,10 @@ class AuthService {
 
   static String deviceToken = "";
   static int fcmTokenCount = 0;
+  static List messages;
 
 
-  String init(){
-    fcmTokenCount = 0;
-
-
-    firebaseMessaging.configure(
-      onLaunch: (Map<String, dynamic> msg) {
-        print(" onLaunch called ${(msg)}");
-      },
-      onResume: (Map<String, dynamic> msg) {
-        print(" onResume called ${(msg)}");
-      },
-      onMessage: (Map<String, dynamic> msg) {
-
-        print(" onMessage called ${(msg)}");
-
-        dynamic notification = msg['notification'];
-
-        _showNotification(
-          icon: 'Alto',
-          title: notification['title'],
-          body: notification['body'],
-        );
-
-
-      },
-    );
-    firebaseMessaging.requestNotificationPermissions(
-        const IosNotificationSettings(sound: true, alert: true, badge: true));
-    firebaseMessaging.onIosSettingsRegistered.listen((
-        IosNotificationSettings setting) {
-      print('IOS Setting Registed');
-    });
-    return getToken();
-  }
-
-  String getToken(){
-    firebaseMessaging.getToken().then((token) {
-      //update(token);
-      deviceToken = token;
-      if((deviceToken == null || deviceToken.isEmpty) && fcmTokenCount < 3){
-        fcmTokenCount++;
-        getToken();
-      }else{
-        return deviceToken;
-      }
-      fcmTokenCount = 0;
-    });
-    return deviceToken;
-  }
-
-
+  String init(){}
 
 
   Future<void> main() async {
@@ -115,10 +69,11 @@ class AuthService {
         });
   }
 
-  // DISPLAY NOTIFICATION - HEADS UP
-  Future<void> _showNotification({String icon, String title, String body}) async {
+  Future<void> showNotification({String icon, String title, String body}) async {
 
     try {
+      MessageObj msg = new MessageObj(title, body);
+      Home.messages.add(msg);
       var androidPlatformChannelSpecifics = AndroidNotificationDetails(
         'your channel id',
         'your channel name',

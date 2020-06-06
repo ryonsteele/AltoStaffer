@@ -1,5 +1,6 @@
 import 'package:alto_staffing/AltoUtils.dart';
 import 'package:alto_staffing/AuthService.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
@@ -7,6 +8,7 @@ import 'dart:io' show Platform;
 import 'package:http/http.dart';
 import 'package:package_info/package_info.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'models/MessageObj.dart';
 import 'models/sessionkey.dart';
 import 'clipper.dart';
 import 'AppPage.dart';
@@ -16,11 +18,15 @@ class Home extends StatefulWidget {
   static String myUserName = "";
   static String versions = "";
   static SessionKey keyNumber;
+  static List messages = new List<MessageObj>();
+  static String deviceToken = "";
   bool bypassSplash = false;
+  static List openShifts;
 
   Home({Key key, @required this.bypassSplash}) : super(key: key);
   @override
   _HomeState createState() => _HomeState(this.bypassSplash);
+
 
 }
 
@@ -31,26 +37,55 @@ class _HomeState extends State<Home> {
     this.bypassSplash = bypassSplash;
   }
 
-
   final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
   TextEditingController _emailController = new TextEditingController();
   TextEditingController _passwordController = new TextEditingController();
   TextEditingController _nameController = new TextEditingController();
   TextEditingController _textFieldController = TextEditingController();
+  final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
+  static int fcmTokenCount = 0;
   static bool firstLogin = false;
   bool rememberMe = false;
   static SharedPreferences prefs;
   String _email;
   String _password;
-  static String deviceToken = "";
   AuthService auth = new AuthService();
 
   @override
   void initState() {
     super.initState();
-    deviceToken = auth.init();
-    auth.main();
+    fcmTokenCount = 0;
+    Home.messages = new List<MessageObj>();
 
+
+    firebaseMessaging.configure(
+      onLaunch: (Map<String, dynamic> msg) {
+        print(" onLaunch called ${(msg)}");
+      },
+      onResume: (Map<String, dynamic> msg) {
+        print(" onResume called ${(msg)}");
+      },
+      onMessage: (Map<String, dynamic> msg) {
+
+        print(" onMessage called ${(msg)}");
+
+        dynamic notification = msg['notification'];
+
+        auth.showNotification(
+          icon: 'Alto',
+          title: notification['title'],
+          body: notification['body'],
+        );
+      },
+    );
+    firebaseMessaging.requestNotificationPermissions(
+        const IosNotificationSettings(sound: true, alert: true, badge: true));
+    firebaseMessaging.onIosSettingsRegistered.listen((
+        IosNotificationSettings setting) {
+      print('IOS Setting Registed');
+    });
+    Home.deviceToken = getToken();
+    auth.main();
     loadPrefs();
   }
 
@@ -512,7 +547,7 @@ class _HomeState extends State<Home> {
     buffer.write('", "password": "');
     buffer.write(_password);
     buffer.write('", "devicetoken": "');
-    buffer.write(deviceToken);
+    buffer.write(Home.deviceToken);
     buffer.write('", "firstTime": "');
     buffer.write(firstLogin);
     buffer.write('", "devicetype": "');
@@ -557,7 +592,7 @@ class _HomeState extends State<Home> {
         print(e);
       }
     }else if(statusCode == 401) {
-      showInvalidPasswordDialog(context);
+      showInvalidPasswordDialog(context, body);
 
     }else{
       showConnectionDialog(context);
@@ -661,7 +696,7 @@ class _HomeState extends State<Home> {
   }
 
 
-  showInvalidPasswordDialog(BuildContext context) {
+  showInvalidPasswordDialog(BuildContext context, String body) {
 
 
     Widget continueButton = FlatButton(
@@ -673,8 +708,8 @@ class _HomeState extends State<Home> {
 
     // set up the AlertDialog
     AlertDialog alert = AlertDialog(
-      title: Text('Invalid Password'),
-      content: Text("Please try again"),
+      title: Text('Invalid Credentials'),
+      content: Text(body),
       actions: [
         continueButton,
       ],
@@ -689,4 +724,18 @@ class _HomeState extends State<Home> {
     );
   }
 
+  String getToken(){
+    firebaseMessaging.getToken().then((token) {
+      //update(token);
+      Home.deviceToken = token;
+      if((Home.deviceToken == null || Home.deviceToken.isEmpty) && fcmTokenCount < 3){
+        fcmTokenCount++;
+        getToken();
+      }else{
+        return Home.deviceToken;
+      }
+      fcmTokenCount = 0;
+    });
+    return Home.deviceToken;
+  }
 }
