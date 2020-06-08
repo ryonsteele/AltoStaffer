@@ -147,7 +147,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
         debugShowCheckedModeBanner: false,
         home: DefaultTabController(
           initialIndex: backTrigger,
-         length: 4,
+         length: 3,
          child: Scaffold(
         resizeToAvoidBottomPadding: false,
         key: _scaffoldKey,
@@ -165,20 +165,21 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
               if(Home.openShifts == null || Home.openShifts.isEmpty) {
                 getOpens();
               }
-            }else if(index ==2){
+            }else if(index ==2) {
               getHistorical();
-            }else if(index ==3){
-              setState(() {
-                this.newMessages = Home.messages;
-              });
-               //print(Home.messages);
-             }
+            }
+//            }else if(index ==3){
+//              setState(() {
+//                this.newMessages = Home.messages;
+//              });
+//               //print(Home.messages);
+//             }
           },
           tabs: [
             Tab(icon: Icon(Icons.calendar_today)),
             Tab(icon: Icon(Icons.local_offer)),
             Tab(icon: Icon(Icons.hourglass_full)),
-            Tab(icon: Icon(Icons.mail_outline)),
+//            Tab(icon: Icon(Icons.mail_outline)),
           ],
         ),
       ),
@@ -196,9 +197,9 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
         Center(
           child: loadingHistoryView(this.historicals),
           ),
-         Center(
-           child: loadingMessagesView(),
-          ),
+//         Center(
+//           child: loadingMessagesView(),
+//          ),
          ],
         ),
         )));
