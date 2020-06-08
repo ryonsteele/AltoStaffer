@@ -178,8 +178,8 @@ class _HomeState extends State<Home> {
     }
 
     void _registerUser() {
-      _email = _emailController.text;
-      _password = _passwordController.text;
+      _email = _emailController.text.trim();
+      _password = _passwordController.text.trim();
       Home.myUserName = _email.trim();
       _emailController.clear();
       _passwordController.clear();
@@ -543,9 +543,9 @@ class _HomeState extends State<Home> {
     Map<String, String> headers = {"Content-type": "application/json"};
     StringBuffer buffer = new StringBuffer();
     buffer.write('{"username": "');
-    buffer.write(_email);
+    buffer.write(_email.trim());
     buffer.write('", "password": "');
-    buffer.write(_password);
+    buffer.write(_password.trim());
     buffer.write('", "devicetoken": "');
     buffer.write(Home.deviceToken);
     buffer.write('", "firstTime": "');

@@ -161,6 +161,9 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
               ),
             ),
             Padding(padding: EdgeInsets.only(top: 7.0)),
+            Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: <Widget>[
             FlatButton(onPressed: (){
               if(_fNameFieldController.text == null || _fNameFieldController.text.isEmpty ||
                   _lNameFieldController.text == null || _lNameFieldController.text.isEmpty ||
@@ -178,13 +181,22 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
                 setState(() {});
               }
             },
-                child: Text('OK', style: TextStyle(color: Colors.purple, fontSize: 18.0),))
+                child: Text('OK', style: TextStyle(color: Colors.purple, fontSize: 18.0),)),
+            FlatButton(onPressed: (){
+              Navigator.of(context, rootNavigator: true).pop('dialog');
+              setState(() {
+                isLoading = false;
+                myButton = getMyButton();
+              });
+            },
+                child: Text('Cancel', style: TextStyle(color: Colors.purple, fontSize: 18.0),))
+            ],),
           ],
         ),
       ),
     );
 
-    showDialog(context: context, builder: (BuildContext context) => errorDialog);
+    showDialog(barrierDismissible: false, context: context, builder: (BuildContext context) => errorDialog);
   }
 
   Widget getMyButton(){
@@ -902,6 +914,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
     // show the dialog
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
         return alert;
@@ -941,6 +954,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
     // show the dialog
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
         return alert;
