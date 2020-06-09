@@ -52,6 +52,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
 
   @override
   void initState() {
+    AltoUtils.initTimeZones();
     WidgetsBinding.instance.addObserver(this);
     if(this.shifts != null) {
       this.shifts.clear();

@@ -18,7 +18,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geocoder/geocoder.dart';
 import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
 import 'package:maps_launcher/maps_launcher.dart';
-import 'package:permission_handler/permission_handler.dart';
+import 'package:timezone/timezone.dart';
+import 'package:timezone/data/latest.dart' as tz;
 
 import 'ResourcesPage.dart';
 
@@ -44,8 +45,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   String _currentAddy;
   static const int OPEN_SHIFT = 0;
   static const int CHECKED_IN = 1;
-  static const int CLOCKIN_WINDOW_BEGIN = -30; //10m befor or 30m after
-  static const int CLOCKIN_WINDOW_END = 10; //10m before or 30m after
+  static const int CLOCKIN_WINDOW_BEGIN = -3000000; //10m befor or 30m after
+  static const int CLOCKIN_WINDOW_END = 1000000; //10m before or 30m after
   //static const int CHECKED_OUT_BRK = 2;
   //static const int CHECKED_IN_BRK = 3;
   static const int CHECKED_OUT = 4;
@@ -55,6 +56,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   static MaterialColor statusColor = Colors.lightBlue;
   static String sliderStatus = "Slide to Clock In/out";
   static bool isLoading = false;
+  static String locationLocal;
   String optionalNoteText = "";
   Widget myButton;
   ClientAddress myClientAddy = new ClientAddress("","","","","","","");
@@ -69,6 +71,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   _ShiftDetailView(Shifts data) {
     WidgetsBinding.instance.addObserver(this);
     this.data = data;
+    //getPerms();
+    tz.initializeTimeZones();
     loadInit();
   }
 
@@ -76,11 +80,12 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   @override
   void didChangeAppLifecycleState(final AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      setState(() {
-        loadInit();
-      });
+      print('Resumed state');
+      loadInit();
     }
   }
+
+
 
   Future loadInit() async {
     backTrigger = 0;
@@ -507,8 +512,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
 
     //debug
-//      lat = 39.861742;
-//      lon = -84.290875;
+      lat = 39.861742;
+      lon = -84.290875;
 
     StringBuffer buffer = new StringBuffer();
     buffer.write('{"tempId": "');
@@ -600,8 +605,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     Map<String, String> headers = {"Content-type": "application/json"};
 
     //debug
-//    lat = 39.861742;
-//    lon = -84.290875;
+    lat = 39.861742;
+    lon = -84.290875;
 
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
@@ -844,16 +849,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   }
 
   _getCurrentLocationInit() async{
-
-    Map<Permission, PermissionStatus> statuses = await [
-      Permission.location,
-      Permission.locationAlways,
-      Permission.locationWhenInUse,
-    ].request();
-    print(statuses[Permission.location]);
-    print(statuses[Permission.locationAlways]);
-    print(statuses[Permission.locationWhenInUse]);
-
     geolocator
         .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
         .then((Position position) {
@@ -1021,9 +1016,11 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   }
 
   String formatDates(String sDate){
-    String formatted;//2020-02-03T08:00:00
-    DateTime dateTime = new DateFormat("yyyy-MM-ddTHH:mm:ss").parse(sDate);
-    return DateFormat.yMd().add_jm().format(dateTime);
+
+    DateTime dateTime =  DateTime.parse(sDate);
+    var ny = getLocation('US/Eastern');
+    var date = TZDateTime.from(dateTime, ny);
+    return DateFormat.yMd().add_jm().format(date);
   }
 
   showInvalidGeoDialog(BuildContext context) {

@@ -7,6 +7,7 @@ import 'package:http/http.dart' as http;
 import 'dart:io' show Platform;
 import 'package:http/http.dart';
 import 'package:package_info/package_info.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/MessageObj.dart';
 import 'models/sessionkey.dart';
@@ -609,7 +610,7 @@ class _HomeState extends State<Home> {
 
     PackageInfo packageInfo = await PackageInfo.fromPlatform();
     Home.versions  = packageInfo.version;
-
+    getPerms();
      prefs = await SharedPreferences.getInstance();
      _emailController.text = prefs.getString('first_key') ?? '';
      _email = prefs.getString('first_key') ?? '';
@@ -623,6 +624,17 @@ class _HomeState extends State<Home> {
        _makePostRequest();
      }
 
+  }
+
+  Future getPerms() async {
+    Map<Permission, PermissionStatus> statuses = await [
+      Permission.location,
+      Permission.locationAlways,
+      Permission.locationWhenInUse,
+    ].request();
+    print(statuses[Permission.location]);
+    print(statuses[Permission.locationAlways]);
+    print(statuses[Permission.locationWhenInUse]);
   }
 
 

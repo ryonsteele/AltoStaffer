@@ -1,5 +1,8 @@
 import 'package:intl/intl.dart';
 
+import '../AltoUtils.dart';
+
+
 class Historicals {
   String _hoursScheduled;
   String _hoursWorked;
@@ -30,8 +33,8 @@ class Historicals {
   Historicals.fromJson(Map<String, dynamic> json) {
     _hoursScheduled = json['hoursScheduled'];
     _hoursWorked = json['hoursWorked'];
-    _dateWindowBegin = formatDates(json['dateWindowBegin']);
-    _dateWindowEnd = formatDates(json['dateWindowEnd']);
+    _dateWindowBegin = AltoUtils.formatDates(json['dateWindowBegin']);
+    _dateWindowEnd = AltoUtils.formatDates(json['dateWindowEnd']);
   }
 
   Map<String, dynamic> toJson() {
@@ -43,9 +46,4 @@ class Historicals {
     return data;
   }
 
-  String formatDates(String sDate){
-    String formatted;//2020-02-03T08:00
-    DateTime dateTime = new DateFormat("yyyy-MM-ddTHH:mm").parse(sDate);
-    return DateFormat.yMd().add_jm().format(dateTime);
-  }
 }

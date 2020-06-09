@@ -1,3 +1,4 @@
+import 'package:alto_staffing/AltoUtils.dart';
 import 'package:intl/intl.dart';
 
 class Shifts {
@@ -173,8 +174,8 @@ class Shifts {
   Shifts.fromJson(Map<String, dynamic> json) {
     _orderId = json['orderId'];
     _status = formatStatus(json['status']);
-    _shiftStartTime = formatDates(json['shiftStartTime']);
-    _shiftEndTime = formatDates(json['shiftEndTime']);
+    _shiftStartTime = AltoUtils.formatDates(json['shiftStartTime']);
+    _shiftEndTime = AltoUtils.formatDates(json['shiftEndTime']);
     _tempId = json['tempId'];
     _firstName = json['firstName'];
     _lastName = json['lastName'];
@@ -205,11 +206,7 @@ class Shifts {
     _vms = json['vms'];
   }
 
-  String formatDates(String sDate){
-    String formatted;//2020-02-03T08:00:00
-    DateTime dateTime = new DateFormat("yyyy-MM-ddTHH:mm:ss").parse(sDate);
-    return DateFormat.yMd().add_jm().format(dateTime);
-  }
+
 
   String formatStatus(String sStatus){
     String status = "";
