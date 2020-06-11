@@ -10,8 +10,8 @@ class AltoUtils {
   }
 
    //static const String baseApiUrl = 'http://192.168.1.98:8080/api/mobile';
-   static const String baseApiUrl = 'http://192.168.1.74:8080/api/mobile';
-   //static const String baseApiUrl = 'http://altowebbapp.com:8080/api/mobile';
+   //static const String baseApiUrl = 'http://192.168.1.74:8080/api/mobile';
+   static const String baseApiUrl = 'http://altowebbapp.com:8080/api/mobile';
    static const String baseHcsUrl = 'https://ctms.contingenttalentmanagement.com/CirrusConcept/clearConnect/2_0/index.cfm';
    static const String suCreds = '&username=rsteele&password=altoApp1!';
 
@@ -20,7 +20,7 @@ class AltoUtils {
    static const String url3 = 'https://www.altostaffing.com';
 
    static String formatDates(String sDate){
-
+     if (sDate == null || sDate.isEmpty) return "";
      DateTime dateTime =  DateTime.parse(sDate);
      var ny = getLocation('US/Eastern');
      var date = TZDateTime.from(dateTime, ny);

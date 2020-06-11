@@ -45,8 +45,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   String _currentAddy;
   static const int OPEN_SHIFT = 0;
   static const int CHECKED_IN = 1;
-  static const int CLOCKIN_WINDOW_BEGIN = -3000000; //10m befor or 30m after
-  static const int CLOCKIN_WINDOW_END = 1000000; //10m before or 30m after
+  static const int CLOCKIN_WINDOW_BEGIN = -30; //10m befor or 30m after
+  static const int CLOCKIN_WINDOW_END = 10; //10m before or 30m after
   //static const int CHECKED_OUT_BRK = 2;
   //static const int CHECKED_IN_BRK = 3;
   static const int CHECKED_OUT = 4;
@@ -512,8 +512,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
 
     //debug
-      lat = 39.861742;
-      lon = -84.290875;
+//      lat = 39.861742;
+//      lon = -84.290875;
 
     StringBuffer buffer = new StringBuffer();
     buffer.write('{"tempId": "');
@@ -605,8 +605,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     Map<String, String> headers = {"Content-type": "application/json"};
 
     //debug
-    lat = 39.861742;
-    lon = -84.290875;
+//    lat = 39.861742;
+//    lon = -84.290875;
 
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
@@ -854,7 +854,12 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
         .then((Position position) {
       _currentPosition = position;
     }).catchError((e) {
+      showLocationFailureDialog(context);
       print(e);
+      setState(() {
+        myButton = null;
+        isLoading = false;
+      });
     });
   }
 
@@ -957,8 +962,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     );
   }
 
-  showConnectionDialog(BuildContext context) {
-
+  showLocationFailureDialog(BuildContext context) {
 
       Widget continueButton = FlatButton(
         child: Text("Ok"),
@@ -969,8 +973,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
       // set up the AlertDialog
       AlertDialog alert = AlertDialog(
-        title: Text('There\'s been a connection issue!'),
-        content: Text("Please check you network, restart the app or try again soon"),
+        title: Text('Location Permissions Not Enabled'),
+        content: Text("You declined location permissions on this device and will not be allowed to clock in or out. Please Enable Location for this App in your device Settings"),
         actions: [
           continueButton,
         ],
@@ -984,6 +988,33 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
         },
       );
     }
+
+  showConnectionDialog(BuildContext context) {
+
+    Widget continueButton = FlatButton(
+      child: Text("Ok"),
+      onPressed:  () {
+        Navigator.of(context, rootNavigator: true).pop('dialog');
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text('There\'s been a connection issue!'),
+      content: Text("Please check you network, restart the app or try again soon"),
+      actions: [
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
 
 
   showInterestSuccessDialog(BuildContext context) {
