@@ -225,7 +225,21 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
           if (this.data.status == 'Open') {
             _postShiftInterest();
           } else {
-            showAlertDialog(context);
+            // * var berlinWallFell = new DateTime.utc(1989, DateTime.november, 9);
+            // * var dDay = new DateTime.utc(1944, DateTime.june, 6);
+            // *
+            // * Duration difference = berlinWallFell.difference(dDay);
+            // * assert(difference.inDays == 16592);
+            var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
+            var date2 = DateTime.now();
+            var difference = newDateTimeObj2.difference(date2).inMinutes;
+            // currently set to allow clockin two hours after shift start
+            if( difference < CLOCKIN_WINDOW_BEGIN || difference > CLOCKIN_WINDOW_END )  {
+              showOutOfWindowDialog(context);
+              return;
+            }else {
+              showAlertDialog(context);
+            }
           }
           Future.delayed(Duration(seconds: 1), () {
             if (_slideButtonKey != null &&
@@ -505,6 +519,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
   Future _makePostRequest(String currentAddy, double lat, double lon) async {
     try{
+
+
     // set up POST request arguments
     String url = AltoUtils.baseApiUrl + '/shift';
     Map<String, String> headers = {"Content-type": "application/json"};
@@ -707,21 +723,21 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
         setState(() {
           currentStatus = 0;
-          statusText = 'OPEN';
           _setStatusText(currentStatus);
 
-         // * var berlinWallFell = new DateTime.utc(1989, DateTime.november, 9);
-         // * var dDay = new DateTime.utc(1944, DateTime.june, 6);
-         // *
-         // * Duration difference = berlinWallFell.difference(dDay);
-         // * assert(difference.inDays == 16592);
-          var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
-          var date2 = DateTime.now();
-          var difference = newDateTimeObj2.difference(date2).inMinutes;
-          // currently set to allow clockin two hours after shift start
-          if( (difference >= CLOCKIN_WINDOW_BEGIN && difference <= CLOCKIN_WINDOW_END) )  {
-            myButton = getMyButton();
-          }
+//         // * var berlinWallFell = new DateTime.utc(1989, DateTime.november, 9);
+//         // * var dDay = new DateTime.utc(1944, DateTime.june, 6);
+//         // *
+//         // * Duration difference = berlinWallFell.difference(dDay);
+//         // * assert(difference.inDays == 16592);
+//          var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
+//          var date2 = DateTime.now();
+//          var difference = newDateTimeObj2.difference(date2).inMinutes;
+//          // currently set to allow clockin two hours after shift start
+//          if( (difference >= CLOCKIN_WINDOW_BEGIN && difference <= CLOCKIN_WINDOW_END) )  {
+//            myButton = getMyButton();
+//          }
+        myButton = getMyButton();
         });
 
         return;
@@ -875,8 +891,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
           _currentPosition.latitude, _currentPosition.longitude);
 
       if(currentStatus == OPEN_SHIFT) {
-        _makePostRequest(_currentAddy, _currentPosition.latitude,
-            _currentPosition.longitude);
+          _makePostRequest(_currentAddy, _currentPosition.latitude,
+              _currentPosition.longitude);
       }else{
         showBreakDialog(context);
       }
@@ -909,6 +925,34 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       actions: [
         continueButton,
         cancelButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  showOutOfWindowDialog(BuildContext context) {
+
+    Widget continueButton = FlatButton(
+      child: Text("Ok"),
+      onPressed:  () {
+        Navigator.of(context, rootNavigator: true).pop('dialog');
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text('Invalid Clock In Time'),
+      content: Text("Clocking In is only available starting 10 minutes prior to Shift Scheduled to begin."),
+      actions: [
+        continueButton,
       ],
     );
 

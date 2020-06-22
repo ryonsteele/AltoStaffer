@@ -46,7 +46,7 @@ class _HomeState extends State<Home> {
   final FirebaseMessaging firebaseMessaging = FirebaseMessaging();
   static int fcmTokenCount = 0;
   static bool firstLogin = false;
-  bool rememberMe = false;
+  bool rememberMe = true;
   static SharedPreferences prefs;
   String _email;
   String _password;
@@ -189,11 +189,6 @@ class _HomeState extends State<Home> {
 
     }
 
-    void _onRememberMeChanged(bool newValue) => setState(() {
-      setState(() {
-        rememberMe = newValue;
-      });
-    });
 
     void _loginSheet() {
       _scaffoldKey.currentState.showBottomSheet<void>((BuildContext context) {
@@ -291,22 +286,6 @@ class _HomeState extends State<Home> {
                             width: MediaQuery.of(context).size.width,
                           ),
                         ),
-                        Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Padding(padding: EdgeInsets.only(left: 50.0, top: 8),
-                                child: Text('Remember Me: ', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 18)),
-                              ),
-                              Padding(padding: EdgeInsets.only(right: 50.0, top: 8),
-                                child:                       Switch(value: this.rememberMe,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      this.rememberMe = value;
-                                      prefs.setBool('remember_key', value);
-                                    });
-                                  },),
-                              ),
-                            ]),
 
                         SizedBox(
                           height: 20,
@@ -563,16 +542,11 @@ class _HomeState extends State<Home> {
     String body = response.body;
 
     if(statusCode >= 200 && statusCode < 300) {
-      if (rememberMe) {
+
         prefs.setString('first_key', _email);
         prefs.setString('second_key', _password);
-      } else {
         _emailController.clear();
         _passwordController.clear();
-        prefs.setString('first_key', '');
-        prefs.setString('second_key', '');
-      }
-
 
       prefs.setBool('init_key', false);
 
@@ -617,10 +591,9 @@ class _HomeState extends State<Home> {
      _passwordController.text = prefs.getString('second_key') ?? '';
      _password = prefs.getString('second_key') ?? '';
      firstLogin =  prefs.getBool('init_key') ?? true;
-     this.rememberMe =  prefs.getBool('remember_key') ?? false;
 
      Home.myUserName = _email;
-     if(!firstLogin && bypassSplash && this.rememberMe){
+     if(!firstLogin && bypassSplash){
        _makePostRequest();
      }
 
