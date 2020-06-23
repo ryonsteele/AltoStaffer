@@ -45,8 +45,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   String _currentAddy;
   static const int OPEN_SHIFT = 0;
   static const int CHECKED_IN = 1;
-  static const int CLOCKIN_WINDOW_BEGIN = -30; //10m befor or 30m after
-  static const int CLOCKIN_WINDOW_END = 10; //10m before or 30m after
+  static const int CLOCKIN_WINDOW_BEGIN = -10; //10m before or 30m after
+  static const int CLOCKIN_WINDOW_END = 30; //10m before or 30m after
   //static const int CHECKED_OUT_BRK = 2;
   //static const int CHECKED_IN_BRK = 3;
   static const int CHECKED_OUT = 4;
@@ -222,6 +222,15 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
         onSlideSuccessCallback: () {
           //_incrementCounter();
           myButton = Center(child: CircularProgressIndicator());
+
+          Future.delayed(Duration(seconds: 1), () {
+            if (_slideButtonKey != null &&
+                _slideButtonKey.currentState != null) {
+              isLoading = true;
+              _slideButtonKey.currentState.reset();
+            }
+          });
+
           if (this.data.status == 'Open') {
             _postShiftInterest();
           } else {
@@ -241,13 +250,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
               showAlertDialog(context);
             }
           }
-          Future.delayed(Duration(seconds: 1), () {
-            if (_slideButtonKey != null &&
-                _slideButtonKey.currentState != null) {
-              isLoading = true;
-              _slideButtonKey.currentState.reset();
-            }
-          });
+
         },);
     }
 
