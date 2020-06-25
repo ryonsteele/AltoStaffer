@@ -243,7 +243,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
             var date2 = DateTime.now();
             var difference = newDateTimeObj2.difference(date2).inMinutes;
             // currently set to allow clockin two hours after shift start
-            if( difference < CLOCKIN_WINDOW_BEGIN || difference > CLOCKIN_WINDOW_END )  {
+            if( difference < CLOCKIN_WINDOW_BEGIN || difference > CLOCKIN_WINDOW_END && currentStatus == OPEN_SHIFT )  {
               showOutOfWindowDialog(context);
               return;
             }else {
@@ -728,18 +728,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
           currentStatus = 0;
           _setStatusText(currentStatus);
 
-//         // * var berlinWallFell = new DateTime.utc(1989, DateTime.november, 9);
-//         // * var dDay = new DateTime.utc(1944, DateTime.june, 6);
-//         // *
-//         // * Duration difference = berlinWallFell.difference(dDay);
-//         // * assert(difference.inDays == 16592);
-//          var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
-//          var date2 = DateTime.now();
-//          var difference = newDateTimeObj2.difference(date2).inMinutes;
-//          // currently set to allow clockin two hours after shift start
-//          if( (difference >= CLOCKIN_WINDOW_BEGIN && difference <= CLOCKIN_WINDOW_END) )  {
-//            myButton = getMyButton();
-//          }
         myButton = getMyButton();
         });
 

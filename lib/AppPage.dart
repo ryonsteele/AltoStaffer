@@ -233,6 +233,19 @@ class AppState extends State<AppPage> {
 
 
     return Scaffold(
+      appBar: AppBar(
+        title: Text('Apply To Alto'),
+        actions: <Widget>[
+          IconButton(
+            icon: Icon(Icons.arrow_back),
+            onPressed: () {
+              Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => Home()));
+            },
+          ),
+          //Add the dropdown widget to the `Action` part of our appBar. it can also be among the `leading` part
+        ],
+        backgroundColor: Color(0xFF0B859E),
+      ),
         resizeToAvoidBottomPadding: false,
         key: _scaffoldKey,
         backgroundColor: Colors.white,
