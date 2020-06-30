@@ -243,8 +243,11 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
             var date2 = DateTime.now();
             var difference = newDateTimeObj2.difference(date2).inMinutes;
             // currently set to allow clockin two hours after shift start
-            if( difference < CLOCKIN_WINDOW_BEGIN || difference > CLOCKIN_WINDOW_END && currentStatus == OPEN_SHIFT )  {
+            print(currentStatus);
+            if( (difference < CLOCKIN_WINDOW_BEGIN || difference > CLOCKIN_WINDOW_END) && currentStatus == OPEN_SHIFT )  {
               showOutOfWindowDialog(context);
+              isLoading = false;
+              myButton = getMyButton();
               return;
             }else {
               showAlertDialog(context);
@@ -980,7 +983,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     // set up the AlertDialog
     AlertDialog alert = AlertDialog(
       title: Text('Did you take a break?'),
-      content: Text("Please click yes if you took a break duriong this shift"),
+      content: Text("Please click yes if you took a break during this shift"),
       actions: [
         continueButton,
         cancelButton,

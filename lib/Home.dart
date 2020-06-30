@@ -541,7 +541,7 @@ class _HomeState extends State<Home> {
     // this API passes back the id of the new item added to the body
     String body = response.body;
 
-    if(statusCode >= 200 && statusCode < 300) {
+    if(statusCode >= 200 && statusCode < 300 && body != null && body.isNotEmpty) {
 
         prefs.setString('first_key', _email);
         prefs.setString('second_key', _password);
