@@ -645,6 +645,7 @@ class _HomeState extends State<Home> {
 
     // show the dialog
     showDialog(
+      barrierDismissible: false,
       context: context,
       builder: (BuildContext context) {
         return alert;
