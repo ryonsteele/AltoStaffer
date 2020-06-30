@@ -42,7 +42,7 @@ class AppState extends State<ResourcesPage> with SingleTickerProviderStateMixin{
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Important Reasources'),
+        title: Text('Human Resources Links'),
         actions: <Widget>[
           IconButton(
             icon: Icon(Icons.arrow_back),

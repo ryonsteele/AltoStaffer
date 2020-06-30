@@ -270,7 +270,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     final List<String> _dropdownValues = [
       "Settings",
       "Sent Home",
-      "Important Resources",
+      "HR Links",
       "Logout"
     ]; //The list of values we want on the dropdown
     String _currentlySelected = ""; //var to hold currently selected value
@@ -294,7 +294,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
             _currentlySelected = value;
             if(_currentlySelected.trim() == 'Sent Home'){
               showSentHomeDialog(context);
-            }else if(_currentlySelected.trim() == "Important Resources"){
+            }else if(_currentlySelected.trim() == "HR Links"){
               Navigator.push(context, MaterialPageRoute(
                   builder: (context) => ResourcesPage(tempid: gTempId)));
 

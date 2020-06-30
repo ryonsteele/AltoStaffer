@@ -94,7 +94,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
       "Settings",
       "Contact Alto",
       "Shift Preferences",
-      "Important Resources",
+      "HR Links",
       "Logout",
     ]; //The list of values we want on the dropdown
     String _currentlySelected = "Settings"; //var to hold currently selected value
@@ -126,7 +126,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
                 Navigator.push(context, MaterialPageRoute(
                     builder: (context) => ShiftPrefPage(tempid: AppState.tempId)));
 
-              }else if(_currentlySelected.trim() == "Important Resources"){
+              }else if(_currentlySelected.trim() == "HR Links"){
                 Navigator.push(context, MaterialPageRoute(
                     builder: (context) => ResourcesPage(tempid: AppState.tempId)));
 
