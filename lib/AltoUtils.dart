@@ -9,11 +9,11 @@ class AltoUtils {
     tz.initializeTimeZones();
   }
 
-   //static const String baseApiUrl = 'http://192.168.1.111:8080/api/mobile';
+   //static const String baseApiUrl = 'http://192.168.1.113:8080/api/mobile';
    //static const String baseApiUrl = 'http://192.168.1.74:8080/api/mobile';
    static const String baseApiUrl = 'http://altowebbapp.com:8080/api/mobile';
    static const String baseHcsUrl = 'https://ctms.contingenttalentmanagement.com/CirrusConcept/clearConnect/2_0/index.cfm';
-   static const String suCreds = '&username=rsteele&password=altoApp1!';
+   static const String suCreds = '&username=lesliekahn&password=January2003!';
 
    static const String url1 = 'https://ctms.contingenttalentmanagement.com/CirrusConcept/workforceportal';
    static const String url2 = 'https://www.heartlandcheckview.com';

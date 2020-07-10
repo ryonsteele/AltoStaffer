@@ -226,7 +226,13 @@ class AppState extends State<AppPage> {
       zip = zipController.text;
       primaryPhone = pPhoneController.text;
       secondaryPhone = sPhoneController.text;
-      _makePostRequest();
+      
+      if(fname.isNotEmpty && lname.isNotEmpty && street.isNotEmpty && city.isNotEmpty 
+         && state.isNotEmpty && zip.isNotEmpty && primaryPhone.isNotEmpty && this.multiSelectCerts.isNotEmpty) {
+        _makePostRequest();
+      }else{
+        showRequiredFieldsDialog(context);
+      }
 
     }
 
@@ -468,8 +474,35 @@ class AppState extends State<AppPage> {
 
     // set up the AlertDialog
     AlertDialog alert = AlertDialog(
-      title: Text('Your Application has been recieved.'),
+      title: Text('Your Application has been received.'),
       content: Text("Thank you for applying!"),
+      actions: [
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  showRequiredFieldsDialog(BuildContext context) {
+
+    Widget continueButton = FlatButton(
+      child: Text("Ok"),
+      onPressed:  () {
+        Navigator.of(context, rootNavigator: true).pop('dialog');
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text('All Fields Required.'),
+      content: Text("Please fill out all fields to submit"),
       actions: [
         continueButton,
       ],

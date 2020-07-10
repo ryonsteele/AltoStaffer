@@ -41,6 +41,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
   Calendar _selectedCalendar;
   List shifts;
   List openShifts;
+  List<Shifts> histShifts;
   List newMessages;
   Historicals historicals;
 
@@ -58,16 +59,15 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
       this.shifts.clear();
       this.shifts = null;
     }
-    _retrieveCalendars();
     if(backTrigger == 0) {
+      _retrieveCalendars();
       getScheduled(false);
-    }else{
+    }else if (backTrigger == 1){
       if(Home.openShifts == null || Home.openShifts.isEmpty) {
         getOpens();
       }
-//      }else{
-//        loadingOpensListView(Home.openShifts);
-//      }
+    }else{
+      getHistData();
     }
     super.initState();
   }
@@ -257,6 +257,13 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
       if(response.body.contains('html')) return null;
       setState(() {
         this.historicals=Historicals.fromJson(json.decode(response.body));
+        if(this.historicals == null || this.historicals.shifts.isEmpty) {
+          setState(() {
+            this.loadMessage = '  You have no shifts completed, please call Alto to schedule shifts.';
+          });
+        }else {
+          this.histShifts = this.historicals.shifts;
+        }
       });
 
 
@@ -326,6 +333,33 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
     }
   }
 
+  loadingHistoricalsListView() {
+    if(this.histShifts != null && this.histShifts.isNotEmpty){
+
+      return this.histShifts.length != 0
+          ? RefreshIndicator( child: ListView.builder(
+        itemCount: this.histShifts != null ? this.histShifts.length : 0,
+        itemBuilder: (context, index) {
+
+          //Shifts myModel = this.histShifts[index] as Shifts;
+
+          return ShiftCard(this.histShifts[index]);
+        },),
+        onRefresh: getHistData,
+      )
+
+          : Center(child: CircularProgressIndicator());
+    }else{
+
+      return ListView.builder(
+          itemCount: 1,
+          itemBuilder: (context, index) {
+            return Text(this.loadMessage,style: TextStyle(fontSize: 14.0,fontWeight: FontWeight.bold));
+          });
+
+    }
+  }
+
   loadingMessagesView() {
     if(this.newMessages != null && this.newMessages.isNotEmpty){
       this.newMessages = this.newMessages.reversed.toList();
@@ -363,6 +397,13 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
     this.shifts.clear();
     setState(() {
       getScheduled(false);
+    });
+  }
+
+  Future<void> getHistData() async{
+    if(this.histShifts != null) this.histShifts.clear();
+    setState(() {
+      getHistorical();
     });
   }
 
@@ -411,7 +452,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
   loadingHistoryView(Historicals item) {
     if(item != null){
       double c_width = MediaQuery.of(context).size.width*0.9;
-      double c_height = MediaQuery.of(context).size.height*0.65;
+      double c_height = MediaQuery.of(context).size.height*0.60;
       List<charts.Series> seriesList = _createSampleData(item);
 
 
@@ -427,42 +468,35 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
             ),
           Container(
          width: c_width,
-          child: Padding(padding: EdgeInsets.only(right: 0.0, bottom: 10, top: 5),
+          child: Padding(padding: EdgeInsets.only(right: 0.0, bottom: 15, top: 5),
               child: Text('${this.historicals.dateWindowBegin} to ${this.historicals.dateWindowEnd}', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 12)),
             ),
           ),
+            Container(
+              width: c_width,
+              child: Padding(padding: EdgeInsets.only(right: 0.0, bottom: 2, top: 5),
+                child: Text('Total Hours Scheduled: ${this.historicals.hoursScheduled}', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 16)),
+              ),
+            ),
+            Container(
+              width: c_width,
+              child: Padding(padding: EdgeInsets.only(right: 0.0, bottom: 10, top: 0),
+                child: Text('Period Hours Worked: ${this.historicals.hoursWorked}', textAlign: TextAlign.start, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 16)),
+              ),
+            ),
+            Container(
+              width: c_width,
+              child: Padding(padding: EdgeInsets.only(right: 0.0, bottom: 2, top: 5),
+                child: Text('Shifts Completed Previous Two Weeks', textAlign: TextAlign.center, style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black, fontSize: 12)),
+              ),
+            ),
             Padding(padding: EdgeInsets.only(right: 5, left: 5, top: 10),
               child: SizedBox(
                height: c_height,
                width: c_width,
-               child: new charts.PieChart(
-                seriesList,
-
-            behaviors: [
-            new charts.DatumLegend(
-              // Positions for "start" and "end" will be left and right respectively
-              // for widgets with a build context that has directionality ltr.
-              // For rtl, "start" and "end" will be right and left respectively.
-              // Since this example has directionality of ltr, the legend is
-              // positioned on the right side of the chart.
-              position: charts.BehaviorPosition.inside,
-              // By default, if the position of the chart is on the left or right of
-              // the chart, [horizontalFirst] is set to false. This means that the
-              // legend entries will grow as new rows first instead of a new column.
-              horizontalFirst: false,
-              // This defines the padding around each legend entry.
-              cellPadding: new EdgeInsets.only(right: 4.0, bottom: 4.0),
-              // Set [showMeasures] to true to display measures in series legend.
-              showMeasures: true,
-              // Configure the measure value to be shown by default in the legend.
-              legendDefaultMeasure: charts.LegendDefaultMeasure.firstValue,
-              // Optionally provide a measure formatter to format the measure value.
-              // If none is specified the value is formatted as a decimal.
-            ),
-          ],
-        ),),),
+               child: loadingHistoricalsListView()
+        ),),
     ],), );
-
 
     }else{
 

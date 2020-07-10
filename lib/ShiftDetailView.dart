@@ -45,8 +45,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   String _currentAddy;
   static const int OPEN_SHIFT = 0;
   static const int CHECKED_IN = 1;
-  static const int CLOCKIN_WINDOW_BEGIN = -10; //10m before or 30m after
-  static const int CLOCKIN_WINDOW_END = 30; //10m before or 30m after
+  static const int CLOCKIN_WINDOW_BEGIN = 10; //10m before or 30m after
+  static const int CLOCKIN_WINDOW_END = -30; //10m before or 30m after
   //static const int CHECKED_OUT_BRK = 2;
   //static const int CHECKED_IN_BRK = 3;
   static const int CHECKED_OUT = 4;
@@ -101,6 +101,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       _makeInterestGetRequest();
       return;
     }
+
     _getClient();
     _getCurrentLocationInit();
     _makeGetRequest();
@@ -175,7 +176,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
                   _titleFieldController.text == null || _titleFieldController.text.isEmpty){
                 return;
               }
-              Navigator.of(context, rootNavigator: true).pop('dialog');
+              Navigator.of(context, rootNavigator: true).pop();
               if(this.data.status == 'Open'){
                 _postShiftInterest();
                 return;
@@ -188,7 +189,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
             },
                 child: Text('OK', style: TextStyle(color: Colors.purple, fontSize: 18.0),)),
             FlatButton(onPressed: (){
-              Navigator.of(context, rootNavigator: true).pop('dialog');
+              Navigator.of(context, rootNavigator: true).pop();
               setState(() {
                 isLoading = false;
                 myButton = getMyButton();
@@ -240,17 +241,23 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
             // * Duration difference = berlinWallFell.difference(dDay);
             // * assert(difference.inDays == 16592);
             var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
+            //var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse("7/9/2020 4:30 PM");
             var date2 = DateTime.now();
             var difference = newDateTimeObj2.difference(date2).inMinutes;
             // currently set to allow clockin two hours after shift start
             print(currentStatus);
-            if( (difference < CLOCKIN_WINDOW_BEGIN || difference > CLOCKIN_WINDOW_END) && currentStatus == OPEN_SHIFT )  {
-              showOutOfWindowDialog(context);
-              isLoading = false;
-              myButton = getMyButton();
-              return;
-            }else {
-              showAlertDialog(context);
+            if(currentStatus == OPEN_SHIFT || currentStatus == CHECKED_IN){
+              if(currentStatus == CHECKED_IN){
+                showAlertDialog(context);
+              }
+              if( difference < CLOCKIN_WINDOW_BEGIN && difference > CLOCKIN_WINDOW_END ) {
+                showAlertDialog(context);
+              }else {
+                showOutOfWindowDialog(context);
+                isLoading = false;
+                myButton = getMyButton();
+                return;
+              }
             }
           }
 
@@ -747,7 +754,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 //        currentStatus = CHECKED_OUT_BRK;
 //      }
 //      if(liveShift.breakStartTime == null){
-        currentStatus = CHECKED_IN;
+//        currentStatus = CHECKED_IN;
       }
       if(liveShift.shiftStartTimeActual == null){
         currentStatus = OPEN_SHIFT;
@@ -757,6 +764,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       if(liveShift.shiftEndTimeActual != null){
         this.optionalNoteText = "Clocked in at: " + formatDates(liveShift.shiftStartTimeActual) +" \nClocked out at: " + formatDates(liveShift.shiftEndTimeActual);
         currentStatus = CHECKED_OUT;
+        backTrigger = 2;
         myButton = null;
       }
       setState(() {
@@ -888,6 +896,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
           _makePostRequest(_currentAddy, _currentPosition.latitude,
               _currentPosition.longitude);
       }else{
+        Navigator.of(context, rootNavigator: true).pop();
         showBreakDialog(context);
       }
     } catch (e) {
