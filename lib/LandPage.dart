@@ -342,6 +342,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
         itemBuilder: (context, index) {
 
           //Shifts myModel = this.histShifts[index] as Shifts;
+          this.histShifts[index].status="Hist";
 
           return ShiftCard(this.histShifts[index]);
         },),

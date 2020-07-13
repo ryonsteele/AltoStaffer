@@ -240,12 +240,13 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
             // *
             // * Duration difference = berlinWallFell.difference(dDay);
             // * assert(difference.inDays == 16592);
+            //this.data.shiftStartTime = "7/13/2020 12:55 PM";
             var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
             //var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse("7/9/2020 4:30 PM");
             var date2 = DateTime.now();
             var difference = newDateTimeObj2.difference(date2).inMinutes;
             // currently set to allow clockin two hours after shift start
-            print(currentStatus);
+
             if(currentStatus == OPEN_SHIFT || currentStatus == CHECKED_IN){
               if(currentStatus == CHECKED_IN){
                 showAlertDialog(context);
@@ -541,8 +542,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
 
     //debug
-//      lat = 39.861742;
-//      lon = -84.290875;
+//      lat = 39.638294;
+//      lon = -84.183781;
 
     StringBuffer buffer = new StringBuffer();
     buffer.write('{"tempId": "');
@@ -634,8 +635,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     Map<String, String> headers = {"Content-type": "application/json"};
 
     //debug
-//    lat = 39.861742;
-//    lon = -84.290875;
+//    lat = 39.638294;
+//    lon = -84.183781;
 
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 

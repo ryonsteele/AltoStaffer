@@ -215,6 +215,8 @@ class Shifts {
       status = 'Open';
     }else if(sStatus == 'filled'){
       status = 'Sched';
+    }else if(sStatus == 'filled'){
+      status = 'Sched';
     }else if(sStatus == 'void'){
       status = 'VOID';
     }else{
