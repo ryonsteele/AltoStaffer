@@ -484,28 +484,6 @@ class _HomeState extends State<Home> {
         ));
   }
 
-  Future getSessionKey() async {
-    List keys = new List<SessionKey>();
-    Response response;
-    try {
-      response = await http.get(AltoUtils.baseHcsUrl + '?action=getSessionKey'+AltoUtils.suCreds+'&resultType=json');
-
-    } on Exception catch (exception) {
-      print(exception);
-    } catch (error) {
-      print(error);
-    }
-
-    if(response.body.contains('html')) return null;
-    //print(response.body);
-
-    keys=(json.decode(response.body) as List).map((i) => SessionKey.fromJson(i)).toList();
-
-    for(SessionKey rec in keys ){
-      print(rec.sessionKey);
-      Home.keyNumber = rec;
-    }
-  }
 
   _makePostRequest() async {
 

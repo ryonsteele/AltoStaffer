@@ -240,7 +240,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
             // *
             // * Duration difference = berlinWallFell.difference(dDay);
             // * assert(difference.inDays == 16592);
-            //this.data.shiftStartTime = "7/13/2020 12:55 PM";
+            //this.data.shiftStartTime = "7/21/2020 04:20 PM";
             var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
             //var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse("7/9/2020 4:30 PM");
             var date2 = DateTime.now();
@@ -251,7 +251,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
               if(currentStatus == CHECKED_IN){
                 showAlertDialog(context);
               }
-              if( difference < CLOCKIN_WINDOW_BEGIN && difference > CLOCKIN_WINDOW_END ) {
+              if( difference < CLOCKIN_WINDOW_BEGIN && difference >= CLOCKIN_WINDOW_END ) {
                 showAlertDialog(context);
               }else {
                 showOutOfWindowDialog(context);

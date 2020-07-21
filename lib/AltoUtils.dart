@@ -10,13 +10,11 @@ class AltoUtils {
   }
 
    //static const String baseApiUrl = 'http://192.168.1.113:8080/api/mobile';
-   //static const String baseApiUrl = 'http://192.168.1.74:8080/api/mobile';
+   //static const String baseApiUrl = 'http://172.20.10.2:8080/api/mobile';
    static const String baseApiUrl = 'http://altowebbapp.com:8080/api/mobile';
-   static const String baseHcsUrl = 'https://ctms.contingenttalentmanagement.com/CirrusConcept/clearConnect/2_0/index.cfm';
-   static const String suCreds = '&username=lesliekahn&password=January2003!';
 
    static const String url1 = 'https://ctms.contingenttalentmanagement.com/CirrusConcept/workforceportal';
-   static const String url2 = 'https://www.heartlandcheckview.com';
+   static const String url2 = 'https://m.heartlandcheckview.com/login';
    static const String url3 = 'https://www.altostaffing.com';
    static const String url4 = 'https://na3.docusign.net/Member/PowerFormSigning.aspx?PowerFormId=9beecada-941b-47b2-a437-afffd9418790&env=na3&acct=fc47ba0d-8c13-4f6f-80b7-e0469555391a';
 
@@ -60,7 +58,12 @@ class AltoUtils {
        "Dayton",
        "Columbus",
        "Medical Business",
-       "Contract Travel"
+       "Contract Travel",
+       "ALL Regions",
+       "Toledo",
+       "Indiana",
+       "Akron",
+       "Allied Health"
      ];
    }
 

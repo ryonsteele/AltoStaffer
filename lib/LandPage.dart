@@ -11,6 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'models/CalEvent.dart';
 import 'models/Historicals.dart';
 import 'ResourcesPage.dart';
+import 'models/MessageObj.dart';
 import 'models/shifts.dart';
 import 'package:alto_staffing/Home.dart';
 import 'ShiftPrefPage.dart';
@@ -169,12 +170,9 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
             }else if(index ==2) {
               getHistorical();
             }
-//            }else if(index ==3){
-//              setState(() {
-//                this.newMessages = Home.messages;
-//              });
-//               //print(Home.messages);
-//             }
+//            else if(index ==3){
+//              getRecentMessages();
+//            }
           },
           tabs: [
             Tab(icon: Icon(Icons.calendar_today)),
@@ -307,7 +305,34 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
     }
   }
 
+  Future getRecentMessages() async {
 
+    this.newMessages = new List<MessageObj>();
+    this.loadMessage = '  Loading....';
+    Response openResponse;
+    try {
+      openResponse = await http.get(AltoUtils.baseApiUrl + '/messages/' + tempId);
+
+      if(openResponse.body.contains('html')) {
+        print(openResponse.body);
+        return null;
+      }
+
+      this.newMessages=(json.decode(openResponse.body) as List).map((i) =>
+          MessageObj.fromJson(i)).toList();
+
+      if (this.newMessages == null || this.newMessages.isEmpty){
+        setState(() {this.loadMessage = '  You have no new messages.';});
+      }
+      setState(() {});
+    } on Exception catch (exception) {
+      print(exception);
+      showConnectionDialog(context);
+    } catch (error) {
+      print(error);
+      showConnectionDialog(context);
+    }
+  }
 
   loadingScheduledListView(List items) {
     if(items != null && items.isNotEmpty){
@@ -370,7 +395,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
         itemBuilder: (context, index) {
           return MessageCard(this.newMessages[index]);
         },),
-        onRefresh: getSchedData,
+        onRefresh: getRecentMessages,
       )
 
           : Center(child: CircularProgressIndicator());
@@ -433,28 +458,11 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
     }
   }
 
-  /// Create series list with one series
-  static List<charts.Series<HoursData, String>> _createSampleData(Historicals item) {
-    final data = [
-      new HoursData("ALL Hours Scheduled: ", double.parse(item.hoursScheduled)),
-      new HoursData("Period Hours Worked: ", double.parse(item.hoursWorked)),
-    ];
-
-    return [
-      new charts.Series<HoursData, String>(
-        id: 'Hours',
-        domainFn: (HoursData hours, _) => hours.label,
-        measureFn: (HoursData hours, _) => hours.value,
-        data: data,
-      )
-    ];
-  }
 
   loadingHistoryView(Historicals item) {
     if(item != null){
       double c_width = MediaQuery.of(context).size.width*0.9;
       double c_height = MediaQuery.of(context).size.height*0.60;
-      List<charts.Series> seriesList = _createSampleData(item);
 
 
       return Container(
@@ -651,11 +659,4 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
     }
   }
 
-}
-
-class HoursData {
-  final String label;
-  final double value;
-
-  HoursData(this.label, this.value);
 }
