@@ -542,8 +542,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
 
     //debug
-//      lat = 39.638294;
-//      lon = -84.183781;
+//      lat = 39.225789;
+//      lon = -84.358219;
 
     StringBuffer buffer = new StringBuffer();
     buffer.write('{"tempId": "');
@@ -624,7 +624,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     }
 
     currentStatus = CHECKED_OUT;
-    myButton = getMyButton();
+    myButton = null;
     setState(() {});
   }
 
@@ -635,8 +635,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     Map<String, String> headers = {"Content-type": "application/json"};
 
     //debug
-//    lat = 39.638294;
-//    lon = -84.183781;
+//    lat = 39.225789;
+//    lon = -84.358219;
 
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
@@ -759,15 +759,17 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       }
       if(liveShift.shiftStartTimeActual == null){
         currentStatus = OPEN_SHIFT;
-      }
 
-
-      if(liveShift.shiftEndTimeActual != null){
+      } else if(liveShift.shiftEndTimeActual != null){
         this.optionalNoteText = "Clocked in at: " + formatDates(liveShift.shiftStartTimeActual) +" \nClocked out at: " + formatDates(liveShift.shiftEndTimeActual);
         currentStatus = CHECKED_OUT;
         backTrigger = 2;
         myButton = null;
+
+      }else{
+        myButton = getMyButton();
       }
+
       setState(() {
         _setStatusText(currentStatus);
       });
