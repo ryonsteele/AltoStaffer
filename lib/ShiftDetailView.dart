@@ -767,6 +767,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
         myButton = null;
 
       }else{
+        currentStatus = CHECKED_IN;
         myButton = getMyButton();
       }
 
