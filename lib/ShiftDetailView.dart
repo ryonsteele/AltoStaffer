@@ -240,7 +240,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
             // *
             // * Duration difference = berlinWallFell.difference(dDay);
             // * assert(difference.inDays == 16592);
-            //this.data.shiftStartTime = "7/21/2020 04:20 PM";
+            //this.data.shiftStartTime = "7/30/2020 10:55 AM";
             var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
             //var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse("7/9/2020 4:30 PM");
             var date2 = DateTime.now();
@@ -250,6 +250,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
             if(currentStatus == OPEN_SHIFT || currentStatus == CHECKED_IN){
               if(currentStatus == CHECKED_IN){
                 showAlertDialog(context);
+                return;
               }
               if( difference < CLOCKIN_WINDOW_BEGIN && difference >= CLOCKIN_WINDOW_END ) {
                 showAlertDialog(context);
@@ -542,8 +543,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
 
     //debug
-//      lat = 39.225789;
-//      lon = -84.358219;
+//      lat = 39.747570;
+//      lon = -84.055505;
 
     StringBuffer buffer = new StringBuffer();
     buffer.write('{"tempId": "');
@@ -635,8 +636,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     Map<String, String> headers = {"Content-type": "application/json"};
 
     //debug
-//    lat = 39.225789;
-//    lon = -84.358219;
+//    lat = 39.747570;
+//    lon = -84.055505;
 
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
@@ -900,7 +901,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
           _makePostRequest(_currentAddy, _currentPosition.latitude,
               _currentPosition.longitude);
       }else{
-        Navigator.of(context, rootNavigator: true).pop();
+        // Navigator.of(context, rootNavigator: true).pop();
         showBreakDialog(context);
       }
     } catch (e) {
