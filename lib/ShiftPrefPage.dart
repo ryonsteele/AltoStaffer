@@ -337,6 +337,7 @@ class AppState extends State<ShiftPrefPage> with SingleTickerProviderStateMixin{
       String body = response.body;
 
       if(statusCode >= 200 && statusCode < 300){
+        if(Home.openShifts != null) Home.openShifts.clear();
 
         prefs.setBool('mon', this.mon);
         prefs.setBool('tue', this.tues);

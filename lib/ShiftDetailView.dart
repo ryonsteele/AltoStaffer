@@ -240,7 +240,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
             // *
             // * Duration difference = berlinWallFell.difference(dDay);
             // * assert(difference.inDays == 16592);
-            //this.data.shiftStartTime = "7/30/2020 10:55 AM";
+            //this.data.shiftStartTime = "8/28/2020 12:35 PM";
             var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
             //var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse("7/9/2020 4:30 PM");
             var date2 = DateTime.now();
@@ -519,7 +519,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     if(statusCode >= 200 && statusCode < 300){
       showInterestSuccessDialog(context);
     }else{
-      showConnectionDialog(context);
+      if(Home.openShifts != null) Home.openShifts.clear();
+      showStaleShiftDialog(context);
     }
 
     } on Exception catch (exception) {
@@ -541,10 +542,9 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     Map<String, String> headers = {"Content-type": "application/json"};
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
-
     //debug
-//      lat = 39.747570;
-//      lon = -84.055505;
+     // lat = 39.755958;
+     // lon = -84.217379;
 
     StringBuffer buffer = new StringBuffer();
     buffer.write('{"tempId": "');
@@ -578,7 +578,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     isLoading = false;
     if(statusCode >= 200 && statusCode < 300) {
       currentStatus = CHECKED_IN;
-      Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId, backTrigger: backTrigger,)));
+      showClockSuccessDialog(context, false);
     }else if(statusCode == 400){
       showInvalidGeoDialog(context);
     }else{
@@ -636,8 +636,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     Map<String, String> headers = {"Content-type": "application/json"};
 
     //debug
-//    lat = 39.747570;
-//    lon = -84.055505;
+    //lat = 39.755958;
+    //lon = -84.217379;
 
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
@@ -678,7 +678,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       if(currentStatus >= CHECKED_OUT){
         myButton = null;
       }
-      Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId, backTrigger: backTrigger,)));
+      showClockSuccessDialog(context, true);
     }else if(statusCode == 400){
       showInvalidGeoDialog(context);
     }else{
@@ -786,8 +786,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       print(error);
       showConnectionDialog(context);
     }
-
-
   }
 
   Future _makeInterestGetRequest() async {
@@ -1046,7 +1044,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     Widget continueButton = FlatButton(
       child: Text("Ok"),
       onPressed:  () {
-        Navigator.of(context, rootNavigator: true).pop('dialog');
+        Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId, backTrigger: 0,)));
       },
     );
 
@@ -1062,6 +1060,36 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     // show the dialog
     showDialog(
       context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+
+  showStaleShiftDialog(BuildContext context) {
+
+    Widget continueButton = FlatButton(
+      child: Text("Ok"),
+      onPressed:  () {
+        Navigator.of(context, rootNavigator: true).pop('dialog');
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text('There\'s been an issue sending interest in shift'),
+      content: Text("It is likely the shift is no longer available and the list on your device is stale. \nPlease refresh your Open shift list by dragging downward on the list itself."),
+      actions: [
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      barrierDismissible: false,
       builder: (BuildContext context) {
         return alert;
       },
@@ -1084,6 +1112,39 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     AlertDialog alert = AlertDialog(
       title: Text('Interest Submitted'),
       content: Text("Someone from Alto should reach out soon!"),
+      actions: [
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
+
+  showClockSuccessDialog(BuildContext context, bool clockout) {
+
+    String message = "You have been Clocked In to this shift!";
+    if(clockout) {
+      message = "You have been Clocked Out of this shift!";
+    }
+
+    Widget continueButton = FlatButton(
+      child: Text("Ok"),
+      onPressed:  () {
+        Navigator.of(context, rootNavigator: true).pop('dialog');
+        Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId, backTrigger: backTrigger,)));
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text('Operation Successful!'),
+      content: Text(message),
       actions: [
         continueButton,
       ],

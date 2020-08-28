@@ -63,6 +63,8 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
     if(backTrigger == 0) {
       _retrieveCalendars();
       getScheduled(false);
+      if(Home.openShifts != null) Home.openShifts.clear();
+      getOpenData();
     }else if (backTrigger == 1){
       if(Home.openShifts == null || Home.openShifts.isEmpty) {
         getOpens();
@@ -191,7 +193,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
         child: loadingScheduledListView(this.shifts),
         ),
         Center(
-         child: loadingOpensListView(Home.openShifts),
+         child: loadingOpensView(),
           ),
         Center(
           child: loadingHistoryView(this.historicals),
@@ -458,6 +460,41 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
     }
   }
 
+  loadingOpensView() {
+    if(Home.openShifts != null && Home.openShifts.isNotEmpty){
+      double c_width = MediaQuery.of(context).size.width;
+      double c_height = MediaQuery.of(context).size.height*0.75;
+
+
+      return Container(
+        color: Color(0xFFDAE0E0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          mainAxisSize: MainAxisSize.max,
+          children: <Widget>[
+
+            Padding(padding: EdgeInsets.only(left: 0.0, bottom: 2, top: 5),
+              child: Text(' pull down on list to refresh ', textAlign: TextAlign.center, style: TextStyle( color: Colors.black, fontSize: 11)),
+            ),
+            Padding(padding: EdgeInsets.only( top: 2),
+              child: SizedBox(
+                  height: c_height,
+                  width: c_width,
+                  child: loadingOpensListView(Home.openShifts)
+              ),),
+          ],), );
+
+    }else{
+
+      return ListView.builder(
+          itemCount: 1,
+          itemBuilder: (context, index) {
+            return Text(this.loadMessage);
+          });
+
+    }
+  }
+
 
   loadingHistoryView(Historicals item) {
     if(item != null){
@@ -644,6 +681,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
       Map<String, String> headers = {"Content-type": "application/json"};
       AuthService auth = new AuthService();
       String token = Home.deviceToken;
+      if(token == null || token.isEmpty || Home.myUserName == null || Home.myUserName.isEmpty) return;
 
       String json = '{"username": "'+ Home.myUserName+'", "devicetoken": "'+token+'"}';
 
