@@ -235,32 +235,34 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
           if (this.data.status == 'Open') {
             _postShiftInterest();
           } else {
-            // * var berlinWallFell = new DateTime.utc(1989, DateTime.november, 9);
-            // * var dDay = new DateTime.utc(1944, DateTime.june, 6);
-            // *
-            // * Duration difference = berlinWallFell.difference(dDay);
-            // * assert(difference.inDays == 16592);
-            //this.data.shiftStartTime = "8/28/2020 12:35 PM";
-            var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
-            //var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse("7/9/2020 4:30 PM");
-            var date2 = DateTime.now();
-            var difference = newDateTimeObj2.difference(date2).inMinutes;
-            // currently set to allow clockin two hours after shift start
 
-            if(currentStatus == OPEN_SHIFT || currentStatus == CHECKED_IN){
-              if(currentStatus == CHECKED_IN){
-                showAlertDialog(context);
-                return;
-              }
-              if( difference < CLOCKIN_WINDOW_BEGIN && difference >= CLOCKIN_WINDOW_END ) {
-                showAlertDialog(context);
-              }else {
-                showOutOfWindowDialog(context);
-                isLoading = false;
-                myButton = getMyButton();
-                return;
-              }
-            }
+            showAlertDialog(context);
+//            // * var berlinWallFell = new DateTime.utc(1989, DateTime.november, 9);
+//            // * var dDay = new DateTime.utc(1944, DateTime.june, 6);
+//            // *
+//            // * Duration difference = berlinWallFell.difference(dDay);
+//            // * assert(difference.inDays == 16592);
+//            //this.data.shiftStartTime = "8/28/2020 12:35 PM";
+//            var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
+//            //var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse("7/9/2020 4:30 PM");
+//            var date2 = DateTime.now();
+//            var difference = newDateTimeObj2.difference(date2).inMinutes;
+//            // currently set to allow clockin two hours after shift start
+
+//            if(currentStatus == OPEN_SHIFT || currentStatus == CHECKED_IN){
+//              if(currentStatus == CHECKED_IN){
+//                showAlertDialog(context);
+//                return;
+//              }
+//              if( difference < CLOCKIN_WINDOW_BEGIN && difference >= CLOCKIN_WINDOW_END ) {
+//                showAlertDialog(context);
+//              }else {
+//                showOutOfWindowDialog(context);
+//                isLoading = false;
+//                myButton = getMyButton();
+//                return;
+//              }
+//            }
           }
 
         },);
@@ -543,8 +545,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
     //debug
-     // lat = 39.755958;
-     // lon = -84.217379;
+//    lat = 39.207551;
+//    lon = -84.381144;
 
     StringBuffer buffer = new StringBuffer();
     buffer.write('{"tempId": "');
@@ -636,8 +638,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     Map<String, String> headers = {"Content-type": "application/json"};
 
     //debug
-    //lat = 39.755958;
-    //lon = -84.217379;
+//    lat = 39.207551;
+//    lon = -84.381144;
 
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
