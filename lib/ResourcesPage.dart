@@ -99,13 +99,6 @@ class AppState extends State<ResourcesPage> with SingleTickerProviderStateMixin{
                     _launchURL(AltoUtils.url3);
                   }
               ),
-              SizedBox(height: 45),
-              GestureDetector(
-                  child: Text("Missed Punch Electronic Time Slip", style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 15.0)),
-                  onTap: () {
-                    _launchURL(AltoUtils.url4);
-                  }
-              ),
               SizedBox(height: 20),
 
             ],

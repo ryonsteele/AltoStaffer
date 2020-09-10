@@ -86,7 +86,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   }
 
 
-
   Future loadInit() async {
     backTrigger = 0;
     sliderStatus = "Slide to Clock In/out";
@@ -145,25 +144,30 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
+
+            Padding(
+              padding:  EdgeInsets.all(3.0),
+              child: Text("Facility Supervisor on Duty"),
+            ),
             Padding(
               padding:  EdgeInsets.all(3.0),
               child: TextField(
                 controller: _fNameFieldController,
-                decoration: InputDecoration(hintText: "Supervisor FirstName"),
+                decoration: InputDecoration(hintText: "Facility Sup. FirstName"),
               ),
             ),
             Padding(
               padding: EdgeInsets.all(3.0),
               child: TextField(
                 controller: _lNameFieldController,
-                decoration: InputDecoration(hintText: "Supervisor LastName"),
+                decoration: InputDecoration(hintText: "Facility Sup. LastName"),
               ),
             ),
             Padding(
               padding: EdgeInsets.all(3.0),
               child: TextField(
                 controller: _titleFieldController,
-                decoration: InputDecoration(hintText: "Supervisor Title"),
+                decoration: InputDecoration(hintText: "Facility Sup. Title"),
               ),
             ),
             Padding(padding: EdgeInsets.only(top: 7.0)),
@@ -545,8 +549,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
     //debug
-//    lat = 39.207551;
-//    lon = -84.381144;
+//    lat = 39.207948;
+//    lon = -84.381561;
 
     StringBuffer buffer = new StringBuffer();
     buffer.write('{"tempId": "');
@@ -638,8 +642,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     Map<String, String> headers = {"Content-type": "application/json"};
 
     //debug
-//    lat = 39.207551;
-//    lon = -84.381144;
+//    lat = 39.207948;
+//    lon = -84.381561;
 
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
@@ -1130,9 +1134,9 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
   showClockSuccessDialog(BuildContext context, bool clockout) {
 
-    String message = "You have been Clocked In to this shift!";
+    String message = "You have successfully clocked in your shift";
     if(clockout) {
-      message = "You have been Clocked Out of this shift!";
+      message = "You have successfully clocked out of your shift";
     }
 
     Widget continueButton = FlatButton(

@@ -19,7 +19,7 @@ environment:
 dependencies:
   http: ^0.12.0+1
   google_maps_flutter: ^0.5.11
-  firebase_messaging: ^6.0.9
+  firebase_messaging: ^7.0.0
   intl: ^0.15.7
   flutter_spinkit: "^4.1.1"
   sliding_button: ^0.0.2

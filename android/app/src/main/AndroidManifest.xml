@@ -12,6 +12,7 @@
 
     <application
         android:label="Alto Healthcare Staffing"
+        android:name="io.flutter.app.FlutterApplication"
         android:icon="@mipmap/launcher_icon"
         android:allowBackup="false"
         android:fullBackupContent="false">
