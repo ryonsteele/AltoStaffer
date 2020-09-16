@@ -241,32 +241,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
           } else {
 
             showAlertDialog(context);
-//            // * var berlinWallFell = new DateTime.utc(1989, DateTime.november, 9);
-//            // * var dDay = new DateTime.utc(1944, DateTime.june, 6);
-//            // *
-//            // * Duration difference = berlinWallFell.difference(dDay);
-//            // * assert(difference.inDays == 16592);
-//            //this.data.shiftStartTime = "8/28/2020 12:35 PM";
-//            var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
-//            //var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse("7/9/2020 4:30 PM");
-//            var date2 = DateTime.now();
-//            var difference = newDateTimeObj2.difference(date2).inMinutes;
-//            // currently set to allow clockin two hours after shift start
-
-//            if(currentStatus == OPEN_SHIFT || currentStatus == CHECKED_IN){
-//              if(currentStatus == CHECKED_IN){
-//                showAlertDialog(context);
-//                return;
-//              }
-//              if( difference < CLOCKIN_WINDOW_BEGIN && difference >= CLOCKIN_WINDOW_END ) {
-//                showAlertDialog(context);
-//              }else {
-//                showOutOfWindowDialog(context);
-//                isLoading = false;
-//                myButton = getMyButton();
-//                return;
-//              }
-//            }
           }
 
         },);
@@ -950,33 +924,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     );
   }
 
-  showOutOfWindowDialog(BuildContext context) {
-
-    Widget continueButton = FlatButton(
-      child: Text("Ok"),
-      onPressed:  () {
-        Navigator.of(context, rootNavigator: true).pop('dialog');
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text('Invalid Clock In Time'),
-      content: Text("Clocking In is only available starting 10 minutes prior to Shift Scheduled to begin."),
-      actions: [
-        continueButton,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
-  }
 
   showBreakDialog(BuildContext context) {
 
