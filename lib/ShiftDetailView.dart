@@ -239,14 +239,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
           if (this.data.status == 'Open') {
             _postShiftInterest();
           } else {
-            // * var berlinWallFell = new DateTime.utc(1989, DateTime.november, 9);
-            // * var dDay = new DateTime.utc(1944, DateTime.june, 6);
-            // *
-            // * Duration difference = berlinWallFell.difference(dDay);
-            // * assert(difference.inDays == 16592);
-            //this.data.shiftStartTime = "8/28/2020 12:35 PM";
+
             var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
-            //var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse("7/9/2020 4:30 PM");
             var date2 = DateTime.now();
 
             if(currentStatus == CHECKED_IN){
