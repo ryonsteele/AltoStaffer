@@ -239,13 +239,33 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
           if (this.data.status == 'Open') {
             _postShiftInterest();
           } else {
+            // * var berlinWallFell = new DateTime.utc(1989, DateTime.november, 9);
+            // * var dDay = new DateTime.utc(1944, DateTime.june, 6);
+            // *
+            // * Duration difference = berlinWallFell.difference(dDay);
+            // * assert(difference.inDays == 16592);
+            //this.data.shiftStartTime = "8/28/2020 12:35 PM";
+            var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
+            //var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse("7/9/2020 4:30 PM");
+            var date2 = DateTime.now();
 
-            showAlertDialog(context);
+            if(currentStatus == CHECKED_IN){
+              showAlertDialog(context);
+              return;
+            }
+
+            if( newDateTimeObj2.day == date2.day || newDateTimeObj2.month == date2.month ) {
+              showAlertDialog(context);
+              return;
+            }else{
+              showOutOfWindowDialog(context);
+              isLoading = false;
+              myButton = getMyButton();
+              return;
+            }
           }
-
         },);
     }
-
   }
 
 
@@ -867,19 +887,10 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   _getAddressFromLatLng() async {
     try {
 
-      var coordinates = new Coordinates(_currentPosition.latitude, _currentPosition.longitude);
-      var addresses = await Geocoder.local.findAddressesFromCoordinates(coordinates);
-      _currentAddy = addresses.first.addressLine;
-
-
-      List<Placemark> p = await geolocator.placemarkFromCoordinates(
-          _currentPosition.latitude, _currentPosition.longitude);
-
       if(currentStatus == OPEN_SHIFT) {
           _makePostRequest(_currentAddy, _currentPosition.latitude,
               _currentPosition.longitude);
       }else{
-        // Navigator.of(context, rootNavigator: true).pop();
         showBreakDialog(context);
       }
     } catch (e) {
@@ -924,6 +935,33 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     );
   }
 
+  showOutOfWindowDialog(BuildContext context) {
+
+    Widget continueButton = FlatButton(
+      child: Text("Ok"),
+      onPressed:  () {
+        Navigator.of(context, rootNavigator: true).pop('dialog');
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text('Invalid Clock In'),
+      content: Text("Clocking In is only available the day the Shift is Scheduled."),
+      actions: [
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      barrierDismissible: false,
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
+  }
 
   showBreakDialog(BuildContext context) {
 

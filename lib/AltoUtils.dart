@@ -11,7 +11,8 @@ class AltoUtils {
 
    //static const String baseApiUrl = 'http://192.168.1.113:8080/api/mobile';
    //static const String baseApiUrl = 'http://172.20.10.2:8080/api/mobile';
-   static const String baseApiUrl = 'http://altowebbapp.com:8080/api/mobile';
+   //static const String baseApiUrl = 'http://altowebbapp.com:8080/api/mobile';
+   static const String baseApiUrl = 'http://webapp.altostaffing.com:8080/api/mobile';
 
    static const String url1 = 'https://ctms.contingenttalentmanagement.com/CirrusConcept/workforceportal';
    static const String url2 = 'https://m.heartlandcheckview.com/login';
