@@ -537,8 +537,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
     //debug
-    lat = 39.857388;
-    lon = -84.290463;
+//    lat = 39.857388;
+//    lon = -84.290463;
 
     StringBuffer buffer = new StringBuffer();
     buffer.write('{"tempId": "');
@@ -630,8 +630,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     Map<String, String> headers = {"Content-type": "application/json"};
 
     //debug
-    lat = 39.857388;
-    lon = -84.290463;
+//    lat = 39.857388;
+//    lon = -84.290463;
 
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
