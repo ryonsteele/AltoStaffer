@@ -413,7 +413,9 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
   }
 
   Future<void> getOpenData() async{
-    this.openShifts.clear();
+    if(this.openShifts != null) {
+      this.openShifts.clear();
+    }
     setState(() {
       if(Home.openShifts == null || Home.openShifts.isEmpty) {
         getOpens();
