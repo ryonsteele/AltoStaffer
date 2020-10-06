@@ -135,7 +135,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
     setState(() {});
 
-    Dialog errorDialog = Dialog(
+    Dialog superDialog = Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)), //this right here
       child: Container(
         height: 300.0,
@@ -206,7 +206,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       ),
     );
 
-    showDialog(barrierDismissible: false, context: context, builder: (BuildContext context) => errorDialog);
+    showDialog(barrierDismissible: false, context: context, builder: (BuildContext context) => superDialog);
   }
 
   Widget getMyButton(){
@@ -518,10 +518,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     }
 
     } on Exception catch (exception) {
-      print(exception);
-      showConnectionDialog(context);
-    } catch (error) {
-      print(error);
       showConnectionDialog(context);
     }
     setState(() {myButton = null;});
@@ -575,15 +571,14 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       showClockSuccessDialog(context, false);
     }else if(statusCode == 400){
       showInvalidGeoDialog(context);
-    }else{
+    }else if(statusCode > 400){
       showConnectionDialog(context);
     }
 
     } on Exception catch (exception) {
       showConnectionDialog(context);
-    } catch (error) {
-      showConnectionDialog(context);
     }
+
     setState(() {myButton = getMyButton();});
   }
 
@@ -613,8 +608,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       }
 
     } on Exception catch (exception) {
-      showConnectionDialog(context);
-    } catch (error) {
       showConnectionDialog(context);
     }
 
@@ -675,15 +668,11 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       showClockSuccessDialog(context, true);
     }else if(statusCode == 400){
       showInvalidGeoDialog(context);
-    }else{
+    }else if (statusCode > 400){
       showConnectionDialog(context);
     }
 
     } on Exception catch (exception) {
-      print(exception);
-      showConnectionDialog(context);
-    } catch (error) {
-      print(error);
       showConnectionDialog(context);
     }
     setState(() {myButton = getMyButton();});
@@ -774,10 +763,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     }
 
     } on Exception catch (exception) {
-      print(exception);
-      showConnectionDialog(context);
-    } catch (error) {
-      print(error);
       showConnectionDialog(context);
     }
   }
@@ -812,9 +797,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
     } on Exception catch (exception) {
       print(exception);
-      showConnectionDialog(context);
-    } catch (error) {
-      print(error);
       showConnectionDialog(context);
     }
     setState(() {});
