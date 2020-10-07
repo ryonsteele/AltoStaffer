@@ -174,7 +174,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
                   _titleFieldController.text == null || _titleFieldController.text.isEmpty){
                 return;
               }
-              Navigator.of(context, rootNavigator: true).pop();
+              Navigator.of(context).pop();
               if(this.data.status == 'Open'){
                 _postShiftInterest();
                 return;
@@ -187,7 +187,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
             },
                 child: Text('OK', style: TextStyle(color: Colors.purple, fontSize: 18.0),)),
             FlatButton(onPressed: (){
-              Navigator.of(context, rootNavigator: true).pop();
+              Navigator.of(context).pop();
               setState(() {
                 isLoading = false;
                 myButton = getMyButton();
