@@ -45,10 +45,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   String _currentAddy;
   static const int OPEN_SHIFT = 0;
   static const int CHECKED_IN = 1;
-  static const int CLOCKIN_WINDOW_BEGIN = 10; //10m before or 30m after
-  static const int CLOCKIN_WINDOW_END = -30; //10m before or 30m after
-  //static const int CHECKED_OUT_BRK = 2;
-  //static const int CHECKED_IN_BRK = 3;
   static const int CHECKED_OUT = 4;
   static SharedPreferences prefs;
   static Color sliderColor = Colors.blue;
@@ -133,8 +129,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
   showAlertDialog(BuildContext context) {
 
-    setState(() {});
-
     Dialog superDialog = Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)), //this right here
       child: Container(
@@ -206,7 +200,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       ),
     );
 
-    showDialog(barrierDismissible: false, context: context, builder: (BuildContext context) => superDialog);
+    setState(() {showDialog(barrierDismissible: false, context: context, builder: (BuildContext context) => superDialog);});
+
   }
 
   Widget getMyButton(){
@@ -225,7 +220,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
         slideButtonIconColor: Color(0xFF05152B),
         radius: 8,
         onSlideSuccessCallback: () {
-          //_incrementCounter();
           myButton = Center(child: CircularProgressIndicator());
 
           Future.delayed(Duration(seconds: 1), () {
@@ -245,17 +239,14 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
             if(currentStatus == CHECKED_IN){
               showAlertDialog(context);
-              return;
             }
 
             if( newDateTimeObj2.day == date2.day && newDateTimeObj2.month == date2.month ) {
               showAlertDialog(context);
-              return;
             }else{
               showOutOfWindowDialog(context);
               isLoading = false;
               myButton = getMyButton();
-              return;
             }
           }
         },);
@@ -704,14 +695,22 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
   Future _makeGetRequest() async {
     // set up POST request arguments
-    try{
+
     String url = AltoUtils.baseApiUrl + '/shift/'+this.data.orderId;
     Map<String, String> headers = {"Content-type": "application/json"};
+    Response response = null;
+    int statusCode = 0;
 
+    try{
+      response = await get(url, headers: headers);
 
-    Response response = await get(url, headers: headers);
-    // check the status code for the result
-    int statusCode = response.statusCode;
+    } on Exception catch (exception) {
+      showConnectionDialog(context);
+    }
+      // check the status code for the result
+    if(response != null) {
+      statusCode = response.statusCode;
+    }
 
 
     if(statusCode >= 200 && statusCode < 300){
@@ -722,8 +721,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
         setState(() {
           currentStatus = 0;
           _setStatusText(currentStatus);
-
-        myButton = getMyButton();
+          myButton = getMyButton();
         });
 
         return;
@@ -732,15 +730,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       final Map parsed = json.decode(body);
       final liveShift = ApiShift.fromJson(parsed);
 
-      if(liveShift.shiftEndTimeActual == null){
-//        currentStatus = CHECKED_IN_BRK;
-//      }
-//      if(liveShift.breakEndTime == null){
-//        currentStatus = CHECKED_OUT_BRK;
-//      }
-//      if(liveShift.breakStartTime == null){
-//        currentStatus = CHECKED_IN;
-      }
       if(liveShift.shiftStartTimeActual == null){
         currentStatus = OPEN_SHIFT;
 
@@ -762,9 +751,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       showConnectionDialog(context);
     }
 
-    } on Exception catch (exception) {
-      showConnectionDialog(context);
-    }
   }
 
   Future _makeInterestGetRequest() async {
@@ -775,12 +761,10 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     String url = AltoUtils.baseApiUrl + '/openshift/'+this.data.orderId+'/'+gTempId;
     Map<String, String> headers = {"Content-type": "application/json"};
 
-
     // make POST request
     Response response = await get(url, headers: headers);
     // check the status code for the result
     int statusCode = response.statusCode;
-
 
     if(statusCode >= 200 && statusCode < 300){
 
@@ -809,16 +793,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       statusColor = Colors.lightGreen;
       sliderColor = Colors.lightGreen;
     }
-//    if(stat == CHECKED_IN_BRK){
-//      statusText = 'ON SHIFT';
-//      statusColor = Colors.lightGreen;
-//      sliderColor = Colors.lightGreen;
-//    }
-//    if(stat == CHECKED_OUT_BRK){
-//      statusText = 'BREAK';
-//      statusColor = Colors.yellow;
-//      sliderColor = Colors.yellow;
-//    }
     if(stat == CHECKED_OUT){
       statusText = 'SHIFT END';
       statusColor = Colors.blueGrey;
@@ -839,10 +813,16 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
         .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
         .then((Position position) {
       _currentPosition = position;
-      _getAddressFromLatLng();
     }).catchError((e) {
       print(e);
     });
+
+    if(currentStatus == OPEN_SHIFT) {
+      _makePostRequest(_currentAddy, _currentPosition.latitude,
+          _currentPosition.longitude);
+    }else{
+      showBreakDialog(context);
+    }
   }
 
   _getCurrentLocationInit() async{
@@ -852,7 +832,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       _currentPosition = position;
     }).catchError((e) {
       showLocationFailureDialog(context);
-      print(e);
       setState(() {
         myButton = null;
         isLoading = false;
@@ -860,19 +839,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     });
   }
 
-  _getAddressFromLatLng() async {
-    try {
-
-      if(currentStatus == OPEN_SHIFT) {
-          _makePostRequest(_currentAddy, _currentPosition.latitude,
-              _currentPosition.longitude);
-      }else{
-        showBreakDialog(context);
-      }
-    } catch (e) {
-      print(e);
-    }
-  }
 
   showSentHomeDialog(BuildContext context) {
 
