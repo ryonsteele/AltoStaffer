@@ -174,7 +174,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
                   _titleFieldController.text == null || _titleFieldController.text.isEmpty){
                 return;
               }
-              Navigator.of(context).pop();
+              Navigator.of(context, rootNavigator: true).pop();
               if(this.data.status == 'Open'){
                 _postShiftInterest();
                 return;
@@ -187,7 +187,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
             },
                 child: Text('OK', style: TextStyle(color: Colors.purple, fontSize: 18.0),)),
             FlatButton(onPressed: (){
-              Navigator.of(context).pop();
+              Navigator.of(context, rootNavigator: true).pop();
               setState(() {
                 isLoading = false;
                 myButton = getMyButton();
@@ -200,7 +200,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       ),
     );
 
-    setState(() {showDialog(barrierDismissible: false, context: context, builder: (BuildContext context) => superDialog);});
+    showDialog(barrierDismissible: false, context: context, builder: (BuildContext context) => superDialog);
+    setState(() {});
 
   }
 
@@ -809,6 +810,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   }
 
   _getCurrentLocation() {
+
     geolocator
         .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
         .then((Position position) {
@@ -821,6 +823,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       _makePostRequest(_currentAddy, _currentPosition.latitude,
           _currentPosition.longitude);
     }else{
+      Navigator.of(context, rootNavigator: true).pop();
       showBreakDialog(context);
     }
   }

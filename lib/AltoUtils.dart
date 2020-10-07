@@ -17,6 +17,9 @@ class AltoUtils {
    static const String url2 = 'https://m.heartlandcheckview.com/login';
    static const String url3 = 'https://www.altostaffing.com';
    static const String url4 = 'https://www.selectagiftplan.com/altostaffing';
+   static const String url5 = 'https://docs.google.com/forms/d/e/1FAIpQLScSckmO9Mt1jOyHd4n52pAlgcDfiPYhwOKzgAbTgFOvaVO-fw/viewform?usp=sf_link';
+   static const String url6 = 'https://docs.google.com/forms/d/e/1FAIpQLSe5j_9L2WC3JjaC-lUc7XXgApczd1tP2qAL5mQSPnUHYzd4Rg/viewform?usp=sf_link';
+   static const String url7 = 'https://docs.google.com/forms/d/e/1FAIpQLSfNn_OAfurq5aKbx5-GlGzHLi10S8Wsoaf4EXKbUuahaM0bDA/viewform?usp=sf_link';
 
 
 

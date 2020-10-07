@@ -58,7 +58,7 @@ class AppState extends State<ResourcesPage> with SingleTickerProviderStateMixin{
       body: Container(
         width: double.infinity,
         child: Padding(
-          padding: const EdgeInsets.only(left: 30.0, right: 30.0, top: 15),
+          padding: const EdgeInsets.only(top: 15),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.start,
             mainAxisSize: MainAxisSize.max,
@@ -84,7 +84,7 @@ class AppState extends State<ResourcesPage> with SingleTickerProviderStateMixin{
                       _launchURL(AltoUtils.url1);
                   }
               ),
-              SizedBox(height: 45),
+              SizedBox(height: 30),
               GestureDetector(
                   child: Text("Heartland Payroll/View Check Stubs Here", style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 15.0)),
                   onTap: () {
@@ -92,23 +92,54 @@ class AppState extends State<ResourcesPage> with SingleTickerProviderStateMixin{
                   }
               ),
               Text("Company Code: 0200BCCS"),
-              SizedBox(height: 45),
+              SizedBox(height: 30),
               GestureDetector(
                   child: Text("Alto’s Website", style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 15.0)),
                   onTap: () {
                     _launchURL(AltoUtils.url3);
                   }
               ),
-              SizedBox(height: 45),
+              SizedBox(height: 30),
               GestureDetector(
                   child: Text("Alto Rewards Program", style: TextStyle(decoration: TextDecoration.underline, color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 15.0)),
                   onTap: () {
                     _launchURL(AltoUtils.url4);
                   }
               ),
-              SizedBox(height: 20),
-
-            ],
+              SizedBox(height: 45),
+             Column(
+               mainAxisAlignment: MainAxisAlignment.start,
+               mainAxisSize: MainAxisSize.max,
+               crossAxisAlignment: CrossAxisAlignment.center,
+               children: <Widget>[
+               Text('Support Ticket', style: TextStyle(
+                  color: Colors.black,
+                  decoration: TextDecoration.underline,
+                  fontWeight: FontWeight.bold,
+                   fontSize: 20.0,
+              ),),
+              SizedBox(height: 30),
+              GestureDetector(
+                  child: Text("  1.) App Issues", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 15.0)),
+                  onTap: () {
+                    _launchURL(AltoUtils.url5);
+                  }
+              ),
+              SizedBox(height: 35),
+              GestureDetector(
+                  child: Text("  2.) Payroll Issues", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 15.0)),
+                  onTap: () {
+                    _launchURL(AltoUtils.url6);
+                  }
+              ),
+              SizedBox(height: 35),
+              GestureDetector(
+                  child: Text("  3.) Report a Problem/Ask a Question", style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold, fontSize: 15.0)),
+                  onTap: () {
+                    _launchURL(AltoUtils.url7);
+                  }
+              ),],),
+          ],
           ),
         ),
       ),
