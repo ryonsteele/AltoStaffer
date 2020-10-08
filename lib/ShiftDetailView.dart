@@ -501,7 +501,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     int statusCode = response.statusCode;
     // this API passes back the id of the new item added to the body
     String body = response.body;
-    isLoading = false;
+
     if(statusCode >= 200 && statusCode < 300){
       showInterestSuccessDialog(context);
     }else{
@@ -512,6 +512,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     } on Exception catch (exception) {
       showConnectionDialog(context);
     }
+    isLoading = false;
     setState(() {myButton = null;});
   }
 
@@ -557,7 +558,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     int statusCode = response.statusCode;
     // this API passes back the id of the new item added to the body
     String body = response.body;
-    isLoading = false;
     if(statusCode >= 200 && statusCode < 300) {
       currentStatus = CHECKED_IN;
       showClockSuccessDialog(context, false);
@@ -570,7 +570,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     } on Exception catch (exception) {
       showConnectionDialog(context);
     }
-
+    isLoading = false;
     setState(() {myButton = getMyButton();});
   }
 
@@ -651,7 +651,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     int statusCode = response.statusCode;
     // this API passes back the id of the new item added to the body
     String body = response.body;
-    isLoading = false;
     if(statusCode >= 200 && statusCode < 300){
       currentStatus++;
       if(currentStatus >= CHECKED_OUT){
@@ -667,6 +666,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     } on Exception catch (exception) {
       showConnectionDialog(context);
     }
+    isLoading = false;
     setState(() {myButton = getMyButton();});
   }
 
