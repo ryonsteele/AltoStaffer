@@ -609,10 +609,12 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   }
 
   Future _makePatchRequest(String currentAddy, double lat, double lon, bool tookBreak) async {
-    try{
-    // set up POST request arguments
+
+    int statusCode = 0;
     String url = AltoUtils.baseApiUrl + '/shift';
     Map<String, String> headers = {"Content-type": "application/json"};
+
+    try{
 
     //debug
 //    lat = 39.857388;
@@ -648,9 +650,13 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     // make POST request
     Response response = await patch(url, headers: headers, body: json);
     // check the status code for the result
-    int statusCode = response.statusCode;
+    statusCode = response.statusCode;
     // this API passes back the id of the new item added to the body
     String body = response.body;
+    } on Exception catch (exception) {
+      showConnectionDialog(context);
+    }
+
     if(statusCode >= 200 && statusCode < 300){
       currentStatus++;
       if(currentStatus >= CHECKED_OUT){
@@ -663,9 +669,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       showConnectionDialog(context);
     }
 
-    } on Exception catch (exception) {
-      showConnectionDialog(context);
-    }
     isLoading = false;
     setState(() {myButton = getMyButton();});
   }
