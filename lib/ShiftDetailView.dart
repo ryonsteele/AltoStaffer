@@ -510,6 +510,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     }
 
     } on Exception catch (exception) {
+      print(exception);
       showConnectionDialog(context);
     }
     isLoading = false;
@@ -568,6 +569,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     }
 
     } on Exception catch (exception) {
+      print(exception);
       showConnectionDialog(context);
     }
     isLoading = false;
@@ -600,6 +602,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       }
 
     } on Exception catch (exception) {
+      print(exception);
       showConnectionDialog(context);
     }
 
@@ -654,6 +657,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     // this API passes back the id of the new item added to the body
     String body = response.body;
     } on Exception catch (exception) {
+      print(exception);
       showConnectionDialog(context);
     }
 
@@ -709,6 +713,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       response = await get(url, headers: headers);
 
     } on Exception catch (exception) {
+      print(exception);
       showConnectionDialog(context);
     }
       // check the status code for the result
@@ -980,30 +985,30 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
   showConnectionDialog(BuildContext context) {
 
-    Widget continueButton = FlatButton(
-      child: Text("Ok"),
-      onPressed:  () {
-        Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId, backTrigger: 0,)));
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text('There\'s been a connection issue!'),
-      content: Text("Please check you network, restart the app or try again soon"),
-      actions: [
-        continueButton,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
+//    Widget continueButton = FlatButton(
+//      child: Text("Ok"),
+//      onPressed:  () {
+//        Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId, backTrigger: 0,)));
+//      },
+//    );
+//
+//    // set up the AlertDialog
+//    AlertDialog alert = AlertDialog(
+//      title: Text('There\'s been a connection issue!'),
+//      content: Text("Please check you network, restart the app or try again soon"),
+//      actions: [
+//        continueButton,
+//      ],
+//    );
+//
+//    // show the dialog
+//    showDialog(
+//      context: context,
+//      barrierDismissible: false,
+//      builder: (BuildContext context) {
+//        return alert;
+//      },
+//    );
   }
 
 
