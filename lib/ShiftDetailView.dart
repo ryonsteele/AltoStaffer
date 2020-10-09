@@ -518,17 +518,19 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   }
 
   Future _makePostRequest(String currentAddy, double lat, double lon) async {
-    try{
 
 
     // set up POST request arguments
     String url = AltoUtils.baseApiUrl + '/shift';
     Map<String, String> headers = {"Content-type": "application/json"};
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
+    int statusCode = 0;
 
     //debug
 //    lat = 39.857388;
 //    lon = -84.290463;
+
+    try{
 
     StringBuffer buffer = new StringBuffer();
     buffer.write('{"tempId": "');
@@ -552,13 +554,18 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     buffer.write('" }');
     String json = buffer.toString();
 
-
     // make POST request
     Response response = await post(url, headers: headers, body: json);
+
     // check the status code for the result
-    int statusCode = response.statusCode;
+    statusCode = response.statusCode;
     // this API passes back the id of the new item added to the body
     String body = response.body;
+    } on Exception catch (exception) {
+      print(exception);
+      showConnectionDialog(context);
+    }
+
     if(statusCode >= 200 && statusCode < 300) {
       currentStatus = CHECKED_IN;
       showClockSuccessDialog(context, false);
@@ -568,10 +575,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       showConnectionDialog(context);
     }
 
-    } on Exception catch (exception) {
-      print(exception);
-      showConnectionDialog(context);
-    }
     isLoading = false;
     setState(() {myButton = getMyButton();});
   }
@@ -706,7 +709,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
     String url = AltoUtils.baseApiUrl + '/shift/'+this.data.orderId;
     Map<String, String> headers = {"Content-type": "application/json"};
-    Response response = null;
+    Response response;
     int statusCode = 0;
 
     try{
