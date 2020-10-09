@@ -172,9 +172,6 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
             }else if(index ==2) {
               getHistorical();
             }
-//            else if(index ==3){
-//              getRecentMessages();
-//            }
           },
           tabs: [
             Tab(icon: Icon(Icons.calendar_today)),
@@ -198,9 +195,6 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
         Center(
           child: loadingHistoryView(this.historicals),
           ),
-//         Center(
-//           child: loadingMessagesView(),
-//          ),
          ],
         ),
         )));
@@ -219,26 +213,21 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
 
       response = await http.get(AltoUtils.baseApiUrl + '/mobileshifts/scheduled/' + tempId);
 
+    } on Exception catch (exception) {
+      print(exception);
+      showConnectionDialog(context);
+    }
 
     if(response.body.contains('html')) return null;
-    //print(response.body);
       setState(() {
         this.shifts=(json.decode(response.body) as List).map((i) =>
             Shifts.fromJson(i)).toList();
       });
-     // this.shifts.sort((a, b) => a.shiftStartTime.compareTo(b.shiftStartTime));
       _addEventsToCalendar();
       if (this.shifts == null || this.shifts.isEmpty){
         setState(() {this.loadMessage = 'You have no shifts scheduled, please call Alto to schedule shifts.';});
       }
 
-    } on Exception catch (exception) {
-      print(exception);
-      showConnectionDialog(context);
-    } catch (error) {
-      print(error);
-      showConnectionDialog(context);
-    }
   }
 
   Future getHistorical() async {
@@ -253,8 +242,12 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
 
       response = await http.get(AltoUtils.baseApiUrl + '/mobileshifts/history/' + tempId);
 
+    } on Exception catch (exception) {
+      print(exception);
+      showConnectionDialog(context);
+    }
 
-      if(response.body.contains('html')) return null;
+    if(response.body.contains('html')) return null;
       setState(() {
         this.historicals=Historicals.fromJson(json.decode(response.body));
         if(this.historicals == null || this.historicals.shifts.isEmpty) {
@@ -267,13 +260,6 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
       });
 
 
-    } on Exception catch (exception) {
-      print(exception);
-      showConnectionDialog(context);
-    } catch (error) {
-      print(error);
-      showConnectionDialog(context);
-    }
   }
 
   Future getOpens() async {
@@ -284,7 +270,12 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
     try {
       openResponse = await http.get(AltoUtils.baseApiUrl + '/mobileshifts/open/' + tempId);
 
-      if(openResponse.body.contains('html')) {
+    } on Exception catch (exception) {
+      print(exception);
+      showConnectionDialog(context);
+    }
+
+    if(openResponse.body.contains('html')) {
         print(openResponse.body);
         return null;
       }
@@ -298,43 +289,8 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
             Home.openShifts = this.openShifts;
         }
       setState(() {});
-    } on Exception catch (exception) {
-      print(exception);
-      showConnectionDialog(context);
-    } catch (error) {
-      print(error);
-      showConnectionDialog(context);
-    }
   }
 
-  Future getRecentMessages() async {
-
-    this.newMessages = new List<MessageObj>();
-    this.loadMessage = '  Loading....';
-    Response openResponse;
-    try {
-      openResponse = await http.get(AltoUtils.baseApiUrl + '/messages/' + tempId);
-
-      if(openResponse.body.contains('html')) {
-        print(openResponse.body);
-        return null;
-      }
-
-      this.newMessages=(json.decode(openResponse.body) as List).map((i) =>
-          MessageObj.fromJson(i)).toList();
-
-      if (this.newMessages == null || this.newMessages.isEmpty){
-        setState(() {this.loadMessage = '  You have no new messages.';});
-      }
-      setState(() {});
-    } on Exception catch (exception) {
-      print(exception);
-      showConnectionDialog(context);
-    } catch (error) {
-      print(error);
-      showConnectionDialog(context);
-    }
-  }
 
   loadingScheduledListView(List items) {
     if(items != null && items.isNotEmpty){
@@ -388,29 +344,6 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
     }
   }
 
-  loadingMessagesView() {
-    if(this.newMessages != null && this.newMessages.isNotEmpty){
-      this.newMessages = this.newMessages.reversed.toList();
-      return this.newMessages.length != 0
-          ? RefreshIndicator( child: ListView.builder(
-        itemCount: this.newMessages != null ? this.newMessages.length : 0,
-        itemBuilder: (context, index) {
-          return MessageCard(this.newMessages[index]);
-        },),
-        onRefresh: getRecentMessages,
-      )
-
-          : Center(child: CircularProgressIndicator());
-    }else{
-
-      return ListView.builder(
-          itemCount: 1,
-          itemBuilder: (context, index) {
-            return Text('  No New Messages. ',style: TextStyle(fontSize: 14.0,fontWeight: FontWeight.bold));
-          });
-
-    }
-  }
 
   Future<void> getOpenData() async{
     if(this.openShifts != null) {
@@ -694,8 +627,6 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
 
     } on Exception catch (exception) {
       print(exception);
-    } catch (error) {
-      print(error);
     }
   }
 
