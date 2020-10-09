@@ -15,7 +15,6 @@ import 'package:http/http.dart';
 import 'package:alto_staffing/Home.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:geocoder/geocoder.dart';
 import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
 import 'package:maps_launcher/maps_launcher.dart';
 import 'package:timezone/timezone.dart';
@@ -40,7 +39,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   TextEditingController _fNameFieldController = TextEditingController();
   TextEditingController _lNameFieldController = TextEditingController();
   TextEditingController _titleFieldController = TextEditingController();
-  final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
+  //final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
   Position _currentPosition;
   String _currentAddy;
   static const int OPEN_SHIFT = 0;
@@ -820,15 +819,23 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     }
   }
 
-  _getCurrentLocation() {
+   _getCurrentLocation() async {
 
-    geolocator
-        .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
-        .then((Position position) {
-      _currentPosition = position;
-    }).catchError((e) {
-      print(e);
-    });
+     try {
+       _currentPosition = await getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+     } on Exception catch (exception) {
+       _currentPosition = null;
+       myButton = null;
+       isLoading = false;
+     } catch (error) {
+       _currentPosition = null;
+       myButton = null;
+       isLoading = false;
+     }
+
+     if(_currentPosition == null){
+       showLocationFailureDialog(context);
+     }
 
     if(currentStatus == OPEN_SHIFT) {
       _makePostRequest(_currentAddy, _currentPosition.latitude,
@@ -840,17 +847,25 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   }
 
   _getCurrentLocationInit() async{
-    geolocator
-        .getCurrentPosition(desiredAccuracy: LocationAccuracy.best)
-        .then((Position position) {
-      _currentPosition = position;
-    }).catchError((e) {
-      showLocationFailureDialog(context);
-      setState(() {
+
+    try {
+      _currentPosition = await getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+    } on Exception catch (exception) {
+       _currentPosition = null;
         myButton = null;
         isLoading = false;
-      });
-    });
+    } catch (error) {
+       _currentPosition = null;
+        myButton = null;
+        isLoading = false;
+    }
+
+    if(_currentPosition == null){
+      showLocationFailureDialog(context);
+    }
+
+    setState(() {});
+
   }
 
 
