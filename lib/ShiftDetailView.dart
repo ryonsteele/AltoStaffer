@@ -266,7 +266,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
     final List<String> _dropdownValues = [
       "Settings",
-      "Sent Home",
       "HR Links",
       "Logout"
     ]; //The list of values we want on the dropdown
@@ -289,9 +288,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
           //once dropdown changes, update the state of out currentValue
           setState(() {
             _currentlySelected = value;
-            if(_currentlySelected.trim() == 'Sent Home'){
-              showSentHomeDialog(context);
-            }else if(_currentlySelected.trim() == "HR Links"){
+            if(_currentlySelected.trim() == "HR Links"){
               Navigator.push(context, MaterialPageRoute(
                   builder: (context) => ResourcesPage(tempid: gTempId)));
 
@@ -498,7 +495,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
     // make POST request
     print(json);
-    Response response = await post(url, headers: headers, body: json).timeout(const Duration(milliseconds: 10));
+    Response response = await post(url, headers: headers, body: json).timeout(const Duration(seconds: 15));
     // check the status code for the result
     int statusCode = response.statusCode;
     // this API passes back the id of the new item added to the body
@@ -532,8 +529,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     int statusCode = 0;
 
     //debug
-    lat = 39.635568;
-    lon = -84.201236;
+//    lat = 39.635568;
+//    lon = -84.201236;
 
     try{
 
@@ -560,7 +557,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     String json = buffer.toString();
 
     // make POST request
-    Response response = await post(url, headers: headers, body: json).timeout(const Duration(seconds: 10));
+    Response response = await post(url, headers: headers, body: json).timeout(const Duration(seconds: 15));
 
     // check the status code for the result
     statusCode = response.statusCode;
@@ -585,42 +582,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     setState(() {myButton = getMyButton();});
   }
 
-  Future _makeSentHomeRequest() async {
-    try{
-      // set up POST request arguments
-      String url = AltoUtils.baseApiUrl + '/orderreturn';
-      Map<String, String> headers = {"Content-type": "application/json"};
-
-      String json = '{"tempId": "'+ this.data.tempId+'", "username": "'+Home.myUserName+'",' +'"clientName": "'+ this.data.clientName+'"}';
-
-      // make POST request
-     // print(json);
-      Response response = await post(url, headers: headers, body: json).timeout(const Duration(seconds: 10));
-      // check the status code for the result
-      int statusCode = response.statusCode;
-      // this API passes back the id of the new item added to the body
-      String body = response.body;
-
-      if(statusCode >= 200 && statusCode < 300){
-        currentStatus = CHECKED_OUT;
-        Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId, backTrigger: backTrigger,)));
-        UrlLauncher.launch('tel:+1 937 228 7007');
-
-      }
-
-    } on TimeoutException catch (exception) {
-      print(exception);
-      showConnectionDialog();
-    } on SocketException catch (exception) {
-      print(exception);
-      showConnectionDialog();
-    }
-
-    currentStatus = CHECKED_OUT;
-    myButton = null;
-    setState(() {});
-  }
-
   Future _makePatchRequest(String currentAddy, double lat, double lon, bool tookBreak) async {
 
     int statusCode = 0;
@@ -631,8 +592,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       Navigator.of(context, rootNavigator: true).pop('dialog');
 
     //debug
-      lat = 39.635568;
-      lon = -84.201236;
+//      lat = 39.635568;
+//      lon = -84.201236;
 
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
@@ -662,7 +623,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
 
     // make POST request
-    Response response = await patch(url, headers: headers, body: json).timeout(const Duration(seconds: 10));
+    Response response = await patch(url, headers: headers, body: json).timeout(const Duration(seconds: 15));
     // check the status code for the result
     statusCode = response.statusCode;
     // this API passes back the id of the new item added to the body
@@ -694,7 +655,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     String url = AltoUtils.baseApiUrl + '/client/'+this.data.clientId;
     Map<String, String> headers = {"Content-type": "application/json"};
 
-    Response response = await get(url, headers: headers).timeout(const Duration(seconds: 10));
+    Response response = await get(url, headers: headers).timeout(const Duration(seconds: 15));
     // check the status code for the result
     int statusCode = response.statusCode;
 
@@ -722,7 +683,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     int statusCode = 0;
 
     try{
-      response = await get(url, headers: headers).timeout(const Duration(seconds: 10));
+      response = await get(url, headers: headers).timeout(const Duration(seconds: 15));
 
     } on TimeoutException catch (exception) {
       print(exception);
@@ -784,7 +745,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     Map<String, String> headers = {"Content-type": "application/json"};
 
     // make POST request
-    Response response = await get(url, headers: headers).timeout(const Duration(seconds: 10));
+    Response response = await get(url, headers: headers).timeout(const Duration(seconds: 15));
     // check the status code for the result
     int statusCode = response.statusCode;
 
@@ -878,44 +839,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
     setState(() {});
 
-  }
-
-
-  showSentHomeDialog(BuildContext context) {
-
-    Widget continueButton = FlatButton(
-      child: Text("Ok"),
-      onPressed:  () {
-        Navigator.of(context, rootNavigator: true).pop('dialog');
-        _makeSentHomeRequest();
-      },
-    );
-
-    Widget cancelButton = FlatButton(
-      child: Text("Cancel"),
-      onPressed:  () {
-        Navigator.of(context, rootNavigator: true).pop('dialog');
-      },
-    );
-
-    // set up the AlertDialog
-    AlertDialog alert = AlertDialog(
-      title: Text('You are being sent home by client?'),
-      content: Text("Please click confirm to send alert to Alto"),
-      actions: [
-        continueButton,
-        cancelButton,
-      ],
-    );
-
-    // show the dialog
-    showDialog(
-      barrierDismissible: false,
-      context: context,
-      builder: (BuildContext context) {
-        return alert;
-      },
-    );
   }
 
   showOutOfWindowDialog() {
