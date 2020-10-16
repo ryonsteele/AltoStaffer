@@ -126,7 +126,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     return true;
   }
 
-  showAlertDialog(BuildContext context) {
+  showAlertDialog() {
 
     Dialog superDialog = Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)), //this right here
@@ -238,13 +238,13 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
             var date2 = DateTime.now();
 
             if(currentStatus == CHECKED_IN){
-              showAlertDialog(context);
+              showAlertDialog();
             }
 
             if( newDateTimeObj2.day == date2.day && newDateTimeObj2.month == date2.month ) {
-              showAlertDialog(context);
+              showAlertDialog();
             }else{
-              showOutOfWindowDialog(context);
+              showOutOfWindowDialog();
               isLoading = false;
               myButton = getMyButton();
             }
@@ -526,8 +526,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     int statusCode = 0;
 
     //debug
-//    lat = 39.857388;
-//    lon = -84.290463;
+    lat = 39.635568;
+    lon = -84.201236;
 
     try{
 
@@ -622,8 +622,8 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     try{
 
     //debug
-//    lat = 39.857388;
-//    lon = -84.290463;
+      lat = 39.635568;
+      lon = -84.201236;
 
     var signOff = _fNameFieldController.text.trim() + " " + _lNameFieldController.text.trim() + " | " + _titleFieldController.text.trim();
 
@@ -842,7 +842,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
           _currentPosition.longitude);
     }else{
       Navigator.of(context, rootNavigator: true).pop();
-      showBreakDialog(context);
+      showBreakDialog();
     }
   }
 
@@ -906,7 +906,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     );
   }
 
-  showOutOfWindowDialog(BuildContext context) {
+  showOutOfWindowDialog() {
 
     Widget continueButton = FlatButton(
       child: Text("Ok"),
@@ -934,7 +934,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     );
   }
 
-  showBreakDialog(BuildContext context) {
+  showBreakDialog() {
 
     Widget continueButton = FlatButton(
       child: Text("Yes"),
