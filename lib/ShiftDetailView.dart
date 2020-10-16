@@ -1,5 +1,8 @@
 
 
+import 'dart:async';
+import 'dart:io';
+
 import 'package:alto_staffing/AltoUtils.dart';
 import 'package:alto_staffing/LandPage.dart';
 import 'package:alto_staffing/models/ClientAddress.dart';
@@ -495,7 +498,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
     // make POST request
     print(json);
-    Response response = await post(url, headers: headers, body: json);
+    Response response = await post(url, headers: headers, body: json).timeout(const Duration(milliseconds: 10));
     // check the status code for the result
     int statusCode = response.statusCode;
     // this API passes back the id of the new item added to the body
@@ -508,9 +511,12 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       showStaleShiftDialog(context);
     }
 
-    } on Exception catch (exception) {
+    } on TimeoutException catch (exception) {
       print(exception);
-      showConnectionDialog(context);
+      showConnectionDialog();
+    } on SocketException catch (exception) {
+      print(exception);
+      showConnectionDialog();
     }
     isLoading = false;
     setState(() {myButton = null;});
@@ -554,15 +560,18 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     String json = buffer.toString();
 
     // make POST request
-    Response response = await post(url, headers: headers, body: json);
+    Response response = await post(url, headers: headers, body: json).timeout(const Duration(seconds: 10));
 
     // check the status code for the result
     statusCode = response.statusCode;
     // this API passes back the id of the new item added to the body
     String body = response.body;
-    } on Exception catch (exception) {
+    } on TimeoutException catch (exception) {
       print(exception);
-      showConnectionDialog(context);
+      showConnectionDialog();
+    } on SocketException catch (exception) {
+      print(exception);
+      showConnectionDialog();
     }
 
     if(statusCode >= 200 && statusCode < 300) {
@@ -570,8 +579,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       showClockSuccessDialog(context, false);
     }else if(statusCode == 400){
       showInvalidGeoDialog(context);
-    }else if(statusCode > 400){
-      showConnectionDialog(context);
     }
 
     isLoading = false;
@@ -588,7 +595,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
       // make POST request
      // print(json);
-      Response response = await post(url, headers: headers, body: json);
+      Response response = await post(url, headers: headers, body: json).timeout(const Duration(seconds: 10));
       // check the status code for the result
       int statusCode = response.statusCode;
       // this API passes back the id of the new item added to the body
@@ -599,13 +606,14 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
         Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId, backTrigger: backTrigger,)));
         UrlLauncher.launch('tel:+1 937 228 7007');
 
-      }else{
-        showConnectionDialog(context);
       }
 
-    } on Exception catch (exception) {
+    } on TimeoutException catch (exception) {
       print(exception);
-      showConnectionDialog(context);
+      showConnectionDialog();
+    } on SocketException catch (exception) {
+      print(exception);
+      showConnectionDialog();
     }
 
     currentStatus = CHECKED_OUT;
@@ -620,6 +628,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     Map<String, String> headers = {"Content-type": "application/json"};
 
     try{
+      Navigator.of(context, rootNavigator: true).pop('dialog');
 
     //debug
       lat = 39.635568;
@@ -653,14 +662,17 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
 
     // make POST request
-    Response response = await patch(url, headers: headers, body: json);
+    Response response = await patch(url, headers: headers, body: json).timeout(const Duration(seconds: 10));
     // check the status code for the result
     statusCode = response.statusCode;
     // this API passes back the id of the new item added to the body
     String body = response.body;
-    } on Exception catch (exception) {
+    } on TimeoutException catch (exception) {
       print(exception);
-      showConnectionDialog(context);
+      showConnectionDialog();
+    } on SocketException catch (exception) {
+      print(exception);
+      showConnectionDialog();
     }
 
     if(statusCode >= 200 && statusCode < 300){
@@ -671,8 +683,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       showClockSuccessDialog(context, true);
     }else if(statusCode == 400){
       showInvalidGeoDialog(context);
-    }else if (statusCode > 400){
-      showConnectionDialog(context);
     }
 
     isLoading = false;
@@ -684,7 +694,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     String url = AltoUtils.baseApiUrl + '/client/'+this.data.clientId;
     Map<String, String> headers = {"Content-type": "application/json"};
 
-    Response response = await get(url, headers: headers);
+    Response response = await get(url, headers: headers).timeout(const Duration(seconds: 10));
     // check the status code for the result
     int statusCode = response.statusCode;
 
@@ -712,11 +722,14 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     int statusCode = 0;
 
     try{
-      response = await get(url, headers: headers);
+      response = await get(url, headers: headers).timeout(const Duration(seconds: 10));
 
-    } on Exception catch (exception) {
+    } on TimeoutException catch (exception) {
       print(exception);
-      showConnectionDialog(context);
+      showConnectionDialog();
+    } on SocketException catch (exception) {
+      print(exception);
+      showConnectionDialog();
     }
       // check the status code for the result
     if(response != null) {
@@ -758,8 +771,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       setState(() {
         _setStatusText(currentStatus);
       });
-    }else{
-      showConnectionDialog(context);
     }
 
   }
@@ -773,7 +784,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     Map<String, String> headers = {"Content-type": "application/json"};
 
     // make POST request
-    Response response = await get(url, headers: headers);
+    Response response = await get(url, headers: headers).timeout(const Duration(seconds: 10));
     // check the status code for the result
     int statusCode = response.statusCode;
 
@@ -786,13 +797,14 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
         setState(() {});
         return;
       }
-    }else{
-      showConnectionDialog(context);
     }
 
-    } on Exception catch (exception) {
+    } on TimeoutException catch (exception) {
       print(exception);
-      showConnectionDialog(context);
+      showConnectionDialog();
+    } on SocketException catch (exception) {
+      print(exception);
+      showConnectionDialog();
     }
     setState(() {});
   }
@@ -939,7 +951,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     Widget continueButton = FlatButton(
       child: Text("Yes"),
       onPressed:  () {
-        Navigator.of(context, rootNavigator: true).pop('dialog');
+        //Navigator.of(context, rootNavigator: true).pop('dialog');
         _makePatchRequest(_currentAddy, _currentPosition.latitude,
             _currentPosition.longitude, true);
       },
@@ -948,7 +960,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     Widget cancelButton = FlatButton(
       child: Text("No"),
       onPressed:  () {
-        Navigator.of(context, rootNavigator: true).pop('dialog');
+        //Navigator.of(context, rootNavigator: true).pop('dialog');
         _makePatchRequest(_currentAddy, _currentPosition.latitude,
             _currentPosition.longitude, false);
       },
@@ -1001,32 +1013,32 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       );
     }
 
-  showConnectionDialog(BuildContext context) {
+  showConnectionDialog() {
 
-//    Widget continueButton = FlatButton(
-//      child: Text("Ok"),
-//      onPressed:  () {
-//        Navigator.of(context).pushReplacement( MaterialPageRoute(builder: (context) => LandPage(tempid: gTempId, backTrigger: 0,)));
-//      },
-//    );
-//
-//    // set up the AlertDialog
-//    AlertDialog alert = AlertDialog(
-//      title: Text('There\'s been a connection issue!'),
-//      content: Text("Please check you network, restart the app or try again soon"),
-//      actions: [
-//        continueButton,
-//      ],
-//    );
-//
-//    // show the dialog
-//    showDialog(
-//      context: context,
-//      barrierDismissible: false,
-//      builder: (BuildContext context) {
-//        return alert;
-//      },
-//    );
+    Widget continueButton = FlatButton(
+      child: Text("Ok"),
+      onPressed:  () {
+        Navigator.of(context, rootNavigator: true).pop('dialog');
+        isLoading = false;
+      },
+    );
+
+    // set up the AlertDialog
+    AlertDialog alert = AlertDialog(
+      title: Text('There\'s been a connection issue!'),
+      content: Text("Please check you network, restart the app or try again soon"),
+      actions: [
+        continueButton,
+      ],
+    );
+
+    // show the dialog
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return alert;
+      },
+    );
   }
 
 

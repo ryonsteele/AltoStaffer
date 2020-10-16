@@ -215,7 +215,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
 
     } on Exception catch (exception) {
       print(exception);
-      showConnectionDialog(context);
+      showConnectionDialog();
     }
 
     if(response.body.contains('html')) return null;
@@ -227,7 +227,6 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
       if (this.shifts == null || this.shifts.isEmpty){
         setState(() {this.loadMessage = 'You have no shifts scheduled, please call Alto to schedule shifts.';});
       }
-
   }
 
   Future getHistorical() async {
@@ -244,7 +243,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
 
     } on Exception catch (exception) {
       print(exception);
-      showConnectionDialog(context);
+      showConnectionDialog();
     }
 
     if(response.body.contains('html')) return null;
@@ -272,7 +271,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
 
     } on Exception catch (exception) {
       print(exception);
-      showConnectionDialog(context);
+      showConnectionDialog();
     }
 
     if(openResponse.body.contains('html')) {
@@ -490,7 +489,7 @@ class AppState extends State<LandPage> with TickerProviderStateMixin, WidgetsBin
     }
   }
 
-  showConnectionDialog(BuildContext context) {
+  showConnectionDialog() {
 
     Widget continueButton = FlatButton(
       child: Text("Ok"),
