@@ -795,7 +795,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
    _getCurrentLocation() async {
 
      try {
-       _currentPosition = await getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+       _currentPosition = await getCurrentPosition(desiredAccuracy: LocationAccuracy.medium);
      } on Exception catch (exception) {
        _currentPosition = null;
        myButton = null;
@@ -822,7 +822,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   _getCurrentLocationInit() async{
 
     try {
-      _currentPosition = await getCurrentPosition(desiredAccuracy: LocationAccuracy.high);
+      _currentPosition = await getCurrentPosition(desiredAccuracy: LocationAccuracy.medium);
     } on Exception catch (exception) {
        _currentPosition = null;
         myButton = null;
