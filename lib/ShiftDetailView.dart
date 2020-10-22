@@ -18,7 +18,6 @@ import 'package:http/http.dart';
 import 'package:alto_staffing/Home.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:url_launcher/url_launcher.dart' as UrlLauncher;
 import 'package:maps_launcher/maps_launcher.dart';
 import 'package:timezone/timezone.dart';
 import 'package:timezone/data/latest.dart' as tz;
@@ -42,7 +41,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   TextEditingController _fNameFieldController = TextEditingController();
   TextEditingController _lNameFieldController = TextEditingController();
   TextEditingController _titleFieldController = TextEditingController();
-  //final Geolocator geolocator = Geolocator()..forceAndroidLocationManager;
   Position _currentPosition;
   String _currentAddy;
   static const int OPEN_SHIFT = 0;
@@ -129,7 +127,9 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     return true;
   }
 
-  showAlertDialog() {
+  showAlertDialog() async {
+
+    bool cont = false;
 
     Dialog superDialog = Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)), //this right here
@@ -176,23 +176,16 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
                   _titleFieldController.text == null || _titleFieldController.text.isEmpty){
                 return;
               }
+              cont = true;
               Navigator.of(context, rootNavigator: true).pop();
-              if(this.data.status == 'Open'){
-                _postShiftInterest();
-                return;
-              }
-              _getCurrentLocation();
-              if(currentStatus >= CHECKED_OUT){
-                myButton = null;
-                setState(() {});
-              }
+
             },
                 child: Text('OK', style: TextStyle(color: Colors.purple, fontSize: 18.0),)),
-            FlatButton(onPressed: (){
-              Navigator.of(context, rootNavigator: true).pop();
-              setState(() {
-                isLoading = false;
-                myButton = getMyButton();
+               FlatButton(onPressed: (){
+                  Navigator.of(context, rootNavigator: true).pop();
+                  setState(() {
+                  isLoading = false;
+                  myButton = getMyButton();
               });
             },
                 child: Text('Cancel', style: TextStyle(color: Colors.purple, fontSize: 18.0),))
@@ -202,8 +195,30 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       ),
     );
 
-    showDialog(barrierDismissible: false, context: context, builder: (BuildContext context) => superDialog);
-    setState(() {});
+    await showDialog(barrierDismissible: false, context: context, builder: (BuildContext context) => superDialog);
+
+    isLoading = false;
+    if(cont) {
+
+      if (currentStatus >= CHECKED_OUT) {
+        myButton = null;
+      } else {
+        myButton = getMyButton();
+      }
+      setState(() {});
+      await _getCurrentLocation();
+
+      if (_currentPosition == null) {
+        await showLocationFailureDialog();
+      }
+
+      if (currentStatus == OPEN_SHIFT) {
+         await _makePostRequest(_currentAddy, _currentPosition.latitude,
+            _currentPosition.longitude);
+      } else {
+        await showBreakDialog();
+      }
+    }
 
   }
 
@@ -222,7 +237,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
         successfulThreshold: 0.9,
         slideButtonIconColor: Color(0xFF05152B),
         radius: 8,
-        onSlideSuccessCallback: () {
+        onSlideSuccessCallback: () async {
           myButton = Center(child: CircularProgressIndicator());
 
           Future.delayed(Duration(seconds: 1), () {
@@ -231,23 +246,26 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
               isLoading = true;
               _slideButtonKey.currentState.reset();
             }
+            return;
           });
 
           if (this.data.status == 'Open') {
-            _postShiftInterest();
+            await _postShiftInterest();
+            return;
           } else {
 
             var newDateTimeObj2 = new DateFormat.yMd().add_jm().parse(this.data.shiftStartTime);
             var date2 = DateTime.now();
 
             if(currentStatus == CHECKED_IN){
-              showAlertDialog();
+              await showAlertDialog();
+              return;
             }
 
             if( newDateTimeObj2.day == date2.day && newDateTimeObj2.month == date2.month ) {
-              showAlertDialog();
+              await showAlertDialog();
             }else{
-              showOutOfWindowDialog();
+              await showOutOfWindowDialog();
               isLoading = false;
               myButton = getMyButton();
             }
@@ -502,18 +520,18 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     String body = response.body;
 
     if(statusCode >= 200 && statusCode < 300){
-      showInterestSuccessDialog(context);
+      await showInterestSuccessDialog();
     }else{
       if(Home.openShifts != null) Home.openShifts.clear();
-      showStaleShiftDialog(context);
+      await showStaleShiftDialog();
     }
 
     } on TimeoutException catch (exception) {
       print(exception);
-      showConnectionDialog();
+      await showConnectionDialog();
     } on SocketException catch (exception) {
       print(exception);
-      showConnectionDialog();
+      await showConnectionDialog();
     }
     isLoading = false;
     setState(() {myButton = null;});
@@ -565,17 +583,17 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     String body = response.body;
     } on TimeoutException catch (exception) {
       print(exception);
-      showConnectionDialog();
+      await showConnectionDialog();
     } on SocketException catch (exception) {
       print(exception);
-      showConnectionDialog();
+      await showConnectionDialog();
     }
 
     if(statusCode >= 200 && statusCode < 300) {
       currentStatus = CHECKED_IN;
-      showClockSuccessDialog(context, false);
+      await showClockSuccessDialog(false);
     }else if(statusCode == 400){
-      showInvalidGeoDialog(context);
+      await showInvalidGeoDialog();
     }
 
     isLoading = false;
@@ -630,10 +648,10 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     String body = response.body;
     } on TimeoutException catch (exception) {
       print(exception);
-      showConnectionDialog();
+      await showConnectionDialog();
     } on SocketException catch (exception) {
       print(exception);
-      showConnectionDialog();
+      await showConnectionDialog();
     }
 
     if(statusCode >= 200 && statusCode < 300){
@@ -641,9 +659,9 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       if(currentStatus >= CHECKED_OUT){
         myButton = null;
       }
-      showClockSuccessDialog(context, true);
+      await showClockSuccessDialog( true);
     }else if(statusCode == 400){
-      showInvalidGeoDialog(context);
+      await showInvalidGeoDialog();
     }
 
     isLoading = false;
@@ -687,10 +705,10 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
     } on TimeoutException catch (exception) {
       print(exception);
-      showConnectionDialog();
+      await showConnectionDialog();
     } on SocketException catch (exception) {
       print(exception);
-      showConnectionDialog();
+      await showConnectionDialog();
     }
       // check the status code for the result
     if(response != null) {
@@ -762,10 +780,10 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
 
     } on TimeoutException catch (exception) {
       print(exception);
-      showConnectionDialog();
+      await showConnectionDialog();
     } on SocketException catch (exception) {
       print(exception);
-      showConnectionDialog();
+      await showConnectionDialog();
     }
     setState(() {});
   }
@@ -806,17 +824,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
        isLoading = false;
      }
 
-     if(_currentPosition == null){
-       showLocationFailureDialog(context);
-     }
-
-    if(currentStatus == OPEN_SHIFT) {
-      _makePostRequest(_currentAddy, _currentPosition.latitude,
-          _currentPosition.longitude);
-    }else{
-      Navigator.of(context, rootNavigator: true).pop();
-      showBreakDialog();
-    }
   }
 
   _getCurrentLocationInit() async{
@@ -832,12 +839,6 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
         myButton = null;
         isLoading = false;
     }
-
-    if(_currentPosition == null){
-      showLocationFailureDialog(context);
-    }
-
-    setState(() {});
 
   }
 
@@ -869,22 +870,22 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     );
   }
 
-  showBreakDialog() {
+  showBreakDialog() async {
 
     Widget continueButton = FlatButton(
       child: Text("Yes"),
-      onPressed:  () {
+      onPressed:  () async {
         //Navigator.of(context, rootNavigator: true).pop('dialog');
-        _makePatchRequest(_currentAddy, _currentPosition.latitude,
+         await _makePatchRequest(_currentAddy, _currentPosition.latitude,
             _currentPosition.longitude, true);
       },
     );
 
     Widget cancelButton = FlatButton(
       child: Text("No"),
-      onPressed:  () {
+      onPressed:  () async {
         //Navigator.of(context, rootNavigator: true).pop('dialog');
-        _makePatchRequest(_currentAddy, _currentPosition.latitude,
+        await _makePatchRequest(_currentAddy, _currentPosition.latitude,
             _currentPosition.longitude, false);
       },
     );
@@ -909,7 +910,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     );
   }
 
-  showLocationFailureDialog(BuildContext context) {
+  showLocationFailureDialog() async {
 
       Widget continueButton = FlatButton(
         child: Text("Ok"),
@@ -936,7 +937,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
       );
     }
 
-  showConnectionDialog() {
+  showConnectionDialog() async {
 
     Widget continueButton = FlatButton(
       child: Text("Ok"),
@@ -965,7 +966,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   }
 
 
-  showStaleShiftDialog(BuildContext context) {
+  showStaleShiftDialog() {
 
     Widget continueButton = FlatButton(
       child: Text("Ok"),
@@ -994,7 +995,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
   }
 
 
-  showInterestSuccessDialog(BuildContext context) {
+  showInterestSuccessDialog() {
 
 
     Widget continueButton = FlatButton(
@@ -1023,7 +1024,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     );
   }
 
-  showClockSuccessDialog(BuildContext context, bool clockout) {
+  showClockSuccessDialog( bool clockout) {
 
     String message = "You have successfully clocked in your shift";
     if(clockout) {
@@ -1064,7 +1065,7 @@ class _ShiftDetailView extends State<ShiftDetailView> with WidgetsBindingObserve
     return DateFormat.yMd().add_jm().format(date);
   }
 
-  showInvalidGeoDialog(BuildContext context) {
+  showInvalidGeoDialog() {
 
 
     Widget continueButton = FlatButton(
